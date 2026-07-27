@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { completeLegacyImport, importLegacy, workbookFromState } from "../../src/main/excel";
+import { applyChapterTotalPages } from "../../src/main/services/progress";
 import type { MangaState } from "../../src/shared/types";
 
 const state: MangaState = {
@@ -19,6 +20,15 @@ describe("MangaSprint workbook", () => {
     const chapters = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets.Chapters,{header:1});
     expect(chapters[0]).toContain("ChapterNumber");
     expect(chapters[1][0]).toBe(11);
+  });
+  it("writes adjusted chapter totals and completed pages to Excel", () => {
+    const adjusted = applyChapterTotalPages(structuredClone(state), { chapterNumber: 11, totalPages: 10 });
+    const workbook = workbookFromState(adjusted);
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets.Chapters, { header: 1 });
+
+    expect(rows[1][2]).toBe(10);
+    expect(rows[1][5]).toBe(10);
+    expect(rows[1][6]).toBe("completed");
   });
   it("imports the real legacy fixture without modifying it", () => {
     const result = importLegacy("examples/legacy-vol2.xlsx");

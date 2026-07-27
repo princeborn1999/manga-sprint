@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AppSettings, LegacyImportPreview, MangaState, OperationResult, ProgressPoint } from "../../shared/types";
+import type { AppSettings, ChapterTotalPagesUpdate, LegacyImportPreview, MangaState, OperationResult, ProgressPoint } from "../../shared/types";
 import type { ChapterInput } from "../../preload/types";
 
 interface AppStore {
@@ -10,6 +10,7 @@ interface AppStore {
   importPreview?: LegacyImportPreview;
   load(): Promise<void>;
   updateProgress(point: ProgressPoint): Promise<void>;
+  updateChapterTotalPages(update: ChapterTotalPagesUpdate): Promise<void>;
   sync(): Promise<void>;
   createExcel(projectName: string, chapters: ChapterInput[]): Promise<void>;
   previewImport(filePath?: string): Promise<void>;
@@ -35,6 +36,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   busy: false,
   async load() { await perform(set, async () => window.mangaSprint.getInitialState()); },
   async updateProgress(point) { await perform(set, async () => window.mangaSprint.updateProgress(point)); },
+  async updateChapterTotalPages(update) { await perform(set, async () => window.mangaSprint.updateChapterTotalPages(update)); },
   async sync() { await perform(set, async () => { const result = await window.mangaSprint.syncExcel(); const state = await window.mangaSprint.getInitialState(); set({ state }); return result; }); },
   async createExcel(projectName, chapters) { await perform(set, async () => window.mangaSprint.createExcelFile({ projectName, chapters })); },
   async previewImport(filePath) {

@@ -1,6 +1,7 @@
 export const IPC = {
   getInitialState: "state:get-initial",
   updateProgress: "progress:update",
+  updateChapterTotalPages: "chapter:update-total-pages",
   chooseExcelFile: "excel:choose",
   createExcelFile: "excel:create",
   importLegacyExcel: "excel:import-legacy",

@@ -1,18 +1,16 @@
 import { randomUUID } from "node:crypto";
-import type { MangaState, ProgressPoint } from "../../shared/types";
-import { cumulativePages, paceStatus, percent } from "../../shared/calculations";
+import type { Chapter, ChapterTotalPagesUpdate, LocalEvent, MangaState, ProgressPoint } from "../../shared/types";
+import { buildDailyPlan, cumulativePages, paceStatus, percent } from "../../shared/calculations";
+import { MAX_EVENTS } from "../../shared/constants";
 import { localDate } from "../../shared/date";
-import { validateProgress } from "../../shared/validation";
-import { addEvent } from "../storage";
+import { validateChapterTotalPages, validateProgress } from "../../shared/validation";
 
-export function applyProgress(state: MangaState, point: ProgressPoint): MangaState {
-  const chapter = validateProgress(point, state.chapters);
-  const previous = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages };
-  chapter.actualCompletedPages = point.page;
-  chapter.updatedAt = new Date().toISOString();
-  chapter.status = point.page === 0 ? "not-started" : point.page === chapter.totalPages ? "completed" : "in-progress";
-  chapter.actualCompletedDate = chapter.status === "completed" ? localDate() : undefined;
+function addEvent(state: MangaState, event: Omit<LocalEvent, "id" | "timestamp">): void {
+  state.events.unshift({ ...event, id: randomUUID(), timestamp: new Date().toISOString() });
+  state.events = state.events.slice(0, MAX_EVENTS);
+}
 
+function updateDailyHistory(state: MangaState, chapter: Chapter): void {
   const today = localDate();
   const ideal = state.dailyPlan.filter((p) => p.date <= today).at(-1) ??
     { date: today, chapterNumber: chapter.chapterNumber, idealPage: 0, totalPages: chapter.totalPages, idealPercent: 0, isManualOverride: false };
@@ -40,9 +38,51 @@ export function applyProgress(state: MangaState, point: ProgressPoint): MangaSta
   const existing = state.dailyHistory.findIndex((item) => item.date === today);
   if (existing >= 0) state.dailyHistory[existing] = history;
   else state.dailyHistory.push(history);
+}
+
+export function applyProgress(state: MangaState, point: ProgressPoint): MangaState {
+  const chapter = validateProgress(point, state.chapters);
+  const previous = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages };
+  chapter.actualCompletedPages = point.page;
+  chapter.updatedAt = new Date().toISOString();
+  chapter.status = point.page === 0 ? "not-started" : point.page === chapter.totalPages ? "completed" : "in-progress";
+  chapter.actualCompletedDate = chapter.status === "completed" ? localDate() : undefined;
+
+  const actualPoint = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages };
+  updateDailyHistory(state, chapter);
   state.settings.hasPendingSync = true;
   state.settings.syncStatus = "pending";
   addEvent(state, { type: "progress", previousProgress: previous, newProgress: actualPoint });
+  return state;
+}
+
+export function applyChapterTotalPages(state: MangaState, update: ChapterTotalPagesUpdate): MangaState {
+  const chapter = validateChapterTotalPages(update, state.chapters);
+  const previousTotalPages = chapter.totalPages;
+  const previousCompletedPages = chapter.actualCompletedPages;
+
+  chapter.totalPages = update.totalPages;
+  chapter.actualCompletedPages = Math.min(previousCompletedPages, update.totalPages);
+  chapter.updatedAt = new Date().toISOString();
+  chapter.status = chapter.actualCompletedPages === 0
+    ? "not-started"
+    : chapter.actualCompletedPages === chapter.totalPages
+      ? "completed"
+      : "in-progress";
+  chapter.actualCompletedDate = chapter.status === "completed"
+    ? chapter.actualCompletedDate ?? localDate()
+    : undefined;
+
+  state.dailyPlan = buildDailyPlan(state.chapters);
+  updateDailyHistory(state, chapter);
+  state.settings.hasPendingSync = true;
+  state.settings.syncStatus = "pending";
+  addEvent(state, {
+    type: "chapter-total-pages",
+    previousTotalPages,
+    newTotalPages: update.totalPages,
+    removedCompletedPages: Math.max(0, previousCompletedPages - chapter.actualCompletedPages),
+  });
   return state;
 }
 

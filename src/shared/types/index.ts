@@ -63,12 +63,16 @@ export interface AppSettings {
 }
 
 export interface ProgressPoint { chapterNumber: number; page: number }
+export interface ChapterTotalPagesUpdate { chapterNumber: number; totalPages: number }
 export interface LocalEvent {
   id: string;
   timestamp: string;
-  type: "progress" | "sync" | "import" | "settings";
+  type: "progress" | "chapter-total-pages" | "sync" | "import" | "settings";
   previousProgress?: ProgressPoint;
   newProgress?: ProgressPoint;
+  previousTotalPages?: number;
+  newTotalPages?: number;
+  removedCompletedPages?: number;
   syncResult?: SyncStatus;
   errorMessage?: string;
 }

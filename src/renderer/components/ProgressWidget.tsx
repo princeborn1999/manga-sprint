@@ -7,7 +7,7 @@ import { horizontalDragHandlers } from "../hooks/useHorizontalDrag";
 import { ImportDialog } from "../dialogs/ImportDialog";
 
 export function ProgressWidget() {
-  const { state, busy, error, notice, updateProgress, sync, previewImport } = useAppStore();
+  const { state, busy, error, notice, updateProgress, updateChapterTotalPages, sync, previewImport } = useAppStore();
   const [fileDragging, setFileDragging] = useState(false);
   const chapter = useMemo(() => state ? currentChapter(state.chapters) : undefined, [state]);
   const fileDropHandlers = {
@@ -83,6 +83,16 @@ export function ProgressWidget() {
   const gap = actualTotal - idealTotal;
   const idealPercent = plan?.idealPercent ?? 0;
   const change = (delta: -1 | 1) => { const point = moveProgress(state.chapters, delta); if (point) void updateProgress(point); };
+  const changeTotalPages = (delta: -1 | 1) => {
+    const totalPages = chapter.totalPages + delta;
+    if (totalPages < 1 || totalPages > 100_000) return;
+    if (totalPages < chapter.actualCompletedPages) {
+      const removed = chapter.actualCompletedPages - totalPages;
+      const confirmed = window.confirm(`總頁數改為 ${totalPages} 頁後，已完成頁數也會刪除 ${removed} 頁。確定要刪除嗎？`);
+      if (!confirmed) return;
+    }
+    void updateChapterTotalPages({ chapterNumber: chapter.chapterNumber, totalPages });
+  };
   return <main className={`shell ${fileDragging ? "drop-ready" : ""}`} {...fileDropHandlers}>
     <button className="collapse-bar no-drag" title="收合到螢幕邊緣" onClick={toggleCollapsed}>⌃</button>
     <header className={!state.settings.lockWindowPosition && state.settings.dockPosition === "free" ? "drag" : ""} {...horizontalDrag}>
@@ -90,7 +100,17 @@ export function ProgressWidget() {
     </header>
     <section className="hero">
       <div className="chapter-tag">CHAPTER {chapter.chapterNumber}</div>
-      <div className="progress-row"><b>{chapter.actualCompletedPages}</b><span>/ {chapter.totalPages} 頁</span><em>{percent(chapter.actualCompletedPages, chapter.totalPages)}%</em></div>
+      <div className="progress-row">
+        <b>{chapter.actualCompletedPages}</b>
+        <span>/</span>
+        <div className="total-pages-control no-drag" aria-label="調整總頁數">
+          <button className="total-page-button" aria-label="總頁數減少一頁" title="刪除一頁" disabled={busy || chapter.totalPages <= 1} onClick={() => changeTotalPages(-1)}>−</button>
+          <strong>{chapter.totalPages}</strong>
+          <button className="total-page-button" aria-label="總頁數增加一頁" title="增加一頁" disabled={busy} onClick={() => changeTotalPages(1)}>＋</button>
+        </div>
+        <span>頁</span>
+        <em>{percent(chapter.actualCompletedPages, chapter.totalPages)}%</em>
+      </div>
       <div className="track"><i style={{ width: `${percent(chapter.actualCompletedPages, chapter.totalPages)}%` }} /></div>
     </section>
     <section className={`pace-summary ${gap < 0 ? "behind" : gap > 0 ? "ahead" : "on-track"}`}>

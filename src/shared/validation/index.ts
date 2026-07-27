@@ -1,4 +1,4 @@
-import type { AppSettings, Chapter, ProgressPoint } from "../types";
+import type { AppSettings, Chapter, ChapterTotalPagesUpdate, ProgressPoint } from "../types";
 import { isValidLocalDate } from "../date";
 
 export function validateChapter(chapter: Chapter): void {
@@ -14,6 +14,14 @@ export function validateProgress(point: ProgressPoint, chapters: Chapter[]): Cha
   const chapter = chapters.find((item) => item.chapterNumber === point.chapterNumber);
   if (!chapter) throw new Error("找不到指定話數");
   if (point.page < 0 || point.page > chapter.totalPages) throw new Error("頁數超出範圍");
+  return chapter;
+}
+
+export function validateChapterTotalPages(update: ChapterTotalPagesUpdate, chapters: Chapter[]): Chapter {
+  if (!Number.isInteger(update.chapterNumber) || update.chapterNumber <= 0) throw new Error("話數必須是正整數");
+  if (!Number.isInteger(update.totalPages) || update.totalPages <= 0 || update.totalPages > 100_000) throw new Error("總頁數必須介於 1 到 100000");
+  const chapter = chapters.find((item) => item.chapterNumber === update.chapterNumber);
+  if (!chapter) throw new Error("找不到指定話數");
   return chapter;
 }
 

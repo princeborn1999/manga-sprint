@@ -1,13 +1,13 @@
 import { app, dialog, ipcMain } from "electron";
 import path from "node:path";
-import type { AppSettings, LegacyImportPreview, MangaState, ProgressPoint } from "../../shared/types";
+import type { AppSettings, ChapterTotalPagesUpdate, LegacyImportPreview, MangaState, ProgressPoint } from "../../shared/types";
 import type { ChapterInput, ImportRequest } from "../../preload/types";
 import { EXPANDED_WIDGET_OPACITY, IPC } from "../../shared/constants";
 import { buildDailyPlan } from "../../shared/calculations";
 import { validateChapter, validateSettings } from "../../shared/validation";
 import { completeLegacyImport, createBackup, importLegacy, syncWorkbook } from "../excel";
 import { addEvent, getState, saveState } from "../storage";
-import { applyProgress, chaptersFromInput } from "../services/progress";
+import { applyChapterTotalPages, applyProgress, chaptersFromInput } from "../services/progress";
 import { applyWidgetLayout, endHorizontalDrag, getWidget, hideWidget, moveHorizontalDrag, openSettings, quitApp, startHorizontalDrag } from "../windows";
 
 function safeError(error: unknown): Error {
@@ -38,6 +38,13 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.updateProgress, async (_event, point: ProgressPoint) => {
     try {
       const state = saveState(applyProgress(getState(), point));
+      if (state.settings.excelFilePath) void syncCurrent().catch(() => undefined);
+      return state;
+    } catch (error) { throw safeError(error); }
+  });
+  ipcMain.handle(IPC.updateChapterTotalPages, async (_event, update: ChapterTotalPagesUpdate) => {
+    try {
+      const state = saveState(applyChapterTotalPages(getState(), update));
       if (state.settings.excelFilePath) void syncCurrent().catch(() => undefined);
       return state;
     } catch (error) { throw safeError(error); }

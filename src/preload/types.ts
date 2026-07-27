@@ -1,4 +1,4 @@
-import type { AppSettings, LegacyImportPreview, MangaState, OperationResult, ProgressPoint } from "../shared/types";
+import type { AppSettings, ChapterTotalPagesUpdate, LegacyImportPreview, MangaState, OperationResult, ProgressPoint } from "../shared/types";
 
 export interface ChapterInput { chapterNumber: number; title: string; totalPages: number; startDate: string; targetEndDate: string }
 export interface ImportRequest { path: string; totals?: Record<number, number> }
@@ -6,6 +6,7 @@ export interface ImportRequest { path: string; totals?: Record<number, number> }
 export interface MangaSprintApi {
   getInitialState(): Promise<MangaState>;
   updateProgress(point: ProgressPoint): Promise<MangaState>;
+  updateChapterTotalPages(update: ChapterTotalPagesUpdate): Promise<MangaState>;
   chooseExcelFile(mode: "open" | "save"): Promise<string | null>;
   getPathForFile(file: File): string;
   createExcelFile(payload?: { path?: string; projectName?: string; chapters?: ChapterInput[] }): Promise<MangaState>;

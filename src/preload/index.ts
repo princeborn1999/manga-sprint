@@ -5,6 +5,7 @@ import type { MangaSprintApi } from "./types";
 const api: MangaSprintApi = {
   getInitialState: () => ipcRenderer.invoke(IPC.getInitialState),
   updateProgress: (point) => ipcRenderer.invoke(IPC.updateProgress, point),
+  updateChapterTotalPages: (update) => ipcRenderer.invoke(IPC.updateChapterTotalPages, update),
   chooseExcelFile: (mode) => ipcRenderer.invoke(IPC.chooseExcelFile, mode),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   createExcelFile: (payload) => ipcRenderer.invoke(IPC.createExcelFile, payload),
