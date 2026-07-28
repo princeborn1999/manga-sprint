@@ -1,58 +1,247 @@
 # MangaSprint
 
-MangaSprint 是完全在本機運作的 Windows 漫畫製作進度 Widget。按一次「＋1 頁」便會先把進度保存到 `electron-store`，更新當日歷史，再嘗試同步人類可讀的 Excel；即使 Excel 正被 Microsoft Excel 鎖定，實際進度仍保留為待同步。
+MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。它會依照每話起訖日期計算今天的理想進度，讓你用 `＋1 頁`、`−1 頁` 快速更新實際完成頁數，並將紀錄安全同步到 Excel。
 
-## MVP 功能
+![MangaSprint 展開畫面](docs/images/widget-expanded.png)
 
-- 420 × 500 透明無框 Widget、永遠置頂、位置記憶、位置鎖定、透明度調整
-- `＋1 頁`、`−1`、跨話進度、累計實際／理想頁數及超前／落後狀態
-- 單一執行個體、系統匣、隱藏而不退出、Windows 登入時啟動
-- 建立新專案及 MangaSprint Excel
-- 唯讀匯入舊 `.xlsx`、解析 `chXX...%` 格式、補齊總頁數後建立新檔
-- Chapters、DailyPlan、DailyHistory、Settings 四個 Excel 工作表
-- 同資料夾臨時檔、重新讀取驗證、正式檔替換、30 天備份保留
-- Excel 鎖檔時保存 pending sync，之後可由 Widget 或系統匣再次同步
-- Main／Preload／Renderer 分層，Renderer 無 Node.js 權限
+> 文件截圖使用示範資料，不包含使用者私人檔案或實際路徑。
 
-## 技術架構
+## 主要功能
 
-- Electron + electron-vite
-- React + TypeScript + Zustand
-- SheetJS (`xlsx`)
-- electron-store
-- electron-builder（NSIS x64）
-- Vitest、React Testing Library、ESLint、Prettier
+- 固定在螢幕頂端的無邊框 Widget。
+- 展開與縮小模式，縮小後仍可左右拖曳位置。
+- 依工作日期計算目前理想進度及相差頁數。
+- 快速增加或減少實際完成頁數。
+- 畫到一半可直接增加或刪除該話總頁數。
+- 拖放或選擇 `.xlsx` 匯入。
+- App 狀態即時保存在本機，Excel 被鎖定時不會遺失進度。
+- 自動同步及手動同步 Excel。
+- Excel 寫入前建立備份、使用臨時檔驗證，再替換正式檔案。
+- 系統匣、永遠置頂、透明度及開機啟動設定。
 
-資料流：
+## 系統需求
+
+- Windows 10 或 Windows 11 x64。
+- 安裝版已包含 Electron，不需要另外安裝 Node.js、Rust、Tauri 或 WebView2。
+- App 本身不需要 Microsoft Excel；只有在你想人工查看或編輯 `.xlsx` 時才需要 Excel 或其他相容軟體。
+
+## 安裝
+
+執行 Windows x64 安裝程式：
 
 ```text
-React Renderer
-  → contextBridge 白名單 API
-  → ipcRenderer.invoke（固定 channel）
-  → Electron Main 輸入驗證
-  → electron-store 即時保存
-  → Excel 臨時檔／驗證／替換
-  → 型別化結果回到 UI
+MangaSprint-0.1.0-x64.exe
 ```
 
-`BrowserWindow` 使用 `contextIsolation: true`、`nodeIntegration: false`、`sandbox: true`。Renderer 不使用 `fs`、`path`、`child_process`、Electron Main API、遠端網頁、shell 或 `eval`。
+目前安裝程式沒有商業程式碼簽章，Windows SmartScreen 可能顯示警告。請確認檔案來源可信，再選擇「其他資訊」→「仍要執行」。
+
+安裝完成後可以從桌面捷徑或開始功能表開啟 MangaSprint。
+
+## 第一次使用：匯入 Excel
+
+1. 開啟 MangaSprint。
+2. 將 `.xlsx` 拖進 Widget，或按「匯入 Excel」。
+3. 確認辨識出的話數範圍及目前進度。
+4. 預設每話總頁數為 18；匯入後仍可逐話加頁或刪頁。
+5. 按「匯入並建立」。
+
+![Excel 匯入確認](docs/images/excel-import.png)
+
+舊式橫向 Excel 不會被修改。程式會讀取資料後，在相同資料夾建立新的 MangaSprint Excel：
+
+```text
+原檔名-MangaSprint.xlsx
+```
+
+支援的橫向格式是每話三欄：
+
+```text
+第幾話理想完成% | 實際完成% | 日期
+```
+
+程式也能重新匯入自己產生的 MangaSprint Excel，並保留：
+
+- 每話總頁數。
+- 實際完成頁數。
+- 話數起訖日期。
+- 完成狀態。
+
+## Widget 操作
+
+### 更新實際完成頁數
+
+- `＋1 頁`：實際完成頁數增加一頁。
+- `−1 頁`：實際完成頁數減少一頁。
+- 百分比、相差頁數及當日紀錄會立即重新計算。
+
+### 中途增加或刪除總頁數
+
+話數總頁數旁有小型 `−`、`＋` 按鈕：
+
+- 增加總頁數時，已完成頁數保持不變。
+- 刪除總頁數時，只要新總頁數仍高於已完成頁數，完成頁數保持不變。
+- 如果新總頁數低於已完成頁數，App 會先要求確認。
+- 確認後，已完成頁數會一起縮減到新的總頁數，代表實際刪除了已完成頁面。
+- 理想排程會依新總頁數重新分配。
+
+例如：
+
+```text
+6 / 18 → 增加總頁數 → 6 / 20
+16 / 18 → 總頁數改為 14 → 確認刪頁 → 14 / 14
+```
+
+### 理想進度與相差頁數
+
+- 「理想進度」是依目前日期及該話工作期間計算出的目標百分比。
+- `−6 頁` 代表目前落後理想進度 6 頁。
+- `＋2 頁` 代表目前領先理想進度 2 頁。
+
+## 縮小、展開及移動
+
+按 Widget 最上方的 `⌃` 可以縮小。
+
+![MangaSprint 縮小畫面](docs/images/widget-collapsed.png)
+
+- 縮小後只顯示目前話數及頁數。
+- 點擊縮小列即可展開。
+- 按住縮小列文字附近左右拖曳，可以沿著螢幕頂端移動。
+- 垂直位置會固定在螢幕最上方，不會被往下拖動。
+- 縮小區域以外不會擋住後方視窗點擊。
+
+## 「同步」是什麼？
+
+同步是把 App 本機 Store 中的最新狀態寫入 MangaSprint Excel。
+
+每次修改進度或總頁數時：
+
+1. App 先立即保存到本機 Store。
+2. 將狀態標記為「待寫入 Excel」。
+3. 在背景自動嘗試同步。
+4. 成功後顯示「已同步」。
+
+平常不需要每次手動按「同步」。手動同步主要用於：
+
+- Excel 原本開著，導致檔案被鎖定。
+- 上一次背景寫入失敗。
+- 想在關閉 App 或複製檔案前確認 Excel 已是最新狀態。
+
+同步寫入流程：
+
+1. 驗證話數、頁數及日期。
+2. 本機 Store 保留最新狀態。
+3. 備份現有 MangaSprint Excel。
+4. 在相同資料夾寫入臨時 `.xlsx`。
+5. 重新讀取臨時檔確認有效。
+6. 成功後才替換正式 Excel。
+7. 失敗時保留「待寫入」狀態，App 進度不會消失。
+
+## 本機快取與重新開啟
+
+MangaSprint 使用 `electron-store` 保存即時狀態。
+
+- 每次操作會先保存到 Store。
+- 關閉或重新啟動後，會從 Store 恢復上次狀態。
+- 啟動時不會每次重新解析 Excel。
+- Excel 是正式的人類可讀紀錄及額外備份。
+- 如果上次尚未寫入 Excel，重新開啟後仍會顯示「待寫入 Excel」。
+
+視窗的關閉按鈕預設只會隱藏到系統匣。要完全關閉，請使用系統匣選單的「結束程式」。
+
+## 設定
+
+![MangaSprint 設定與同步](docs/images/settings-sync.png)
+
+設定頁提供：
+
+- 永遠置頂。
+- 開機啟動。
+- Widget 透明度。
+- 停靠位置。
+- 立即同步。
+- 手動建立 Excel 備份。
+- 目前 Excel 路徑及同步狀態。
+
+## 換到另一台電腦
+
+### 還沒開始使用 MangaSprint
+
+1. 複製安裝檔及原始排程 Excel 到新電腦。
+2. 安裝 MangaSprint。
+3. 匯入原始 Excel。
+4. 確認預設總頁數後開始使用。
+
+### 已經使用一段時間，要連進度一起搬移
+
+1. 在舊電腦關閉 Excel。
+2. 確認 MangaSprint 顯示「已同步」；若不是，按一次「同步」。
+3. 完全結束 MangaSprint。
+4. 複製最新的 `*-MangaSprint.xlsx` 到新電腦。
+5. 在新電腦安裝 MangaSprint。
+6. 匯入這份 MangaSprint Excel。
+
+每話總頁數與實際完成頁數會保留。視窗位置、透明度及開機啟動屬於每台電腦的本機設定，需要在新電腦重新設定。
+
+不要讓兩台電腦同時修改各自的 Excel；目前沒有雲端合併功能。
+
+## 開發
+
+### 技術架構
+
+- Electron
+- React
+- TypeScript
+- Vite / electron-vite
+- Zustand
+- SheetJS (`xlsx`)
+- electron-store
+- Vitest
+- ESLint / Prettier
+- NSIS Windows x64 installer
+
+### 安裝依賴並啟動
+
+```powershell
+npm install
+npm run dev
+```
+
+### 驗證
+
+```powershell
+npm run typecheck
+npm run lint
+npm run test
+npm run build
+```
+
+### 建立 Windows 安裝檔
+
+```powershell
+npm run dist:win
+```
+
+輸出位置：
+
+```text
+release/MangaSprint-0.1.0-x64.exe
+```
 
 ## 專案結構
 
 ```text
 src/
   main/
-    excel/       Excel 建立、匯入、備份、原子替換
-    ipc/         白名單 IPC handlers 與輸入驗證
-    services/    進度與每日歷史服務
+    excel/       Excel 匯入、備份、驗證及原子替換
+    ipc/         型別化 IPC handlers
+    services/    進度及總頁數更新
     storage/     electron-store
-    tray/        Windows 系統匣
-    windows/     Widget 與設定視窗
-  preload/       contextBridge API 與型別
+    tray/        系統匣
+    windows/     Widget 視窗及拖曳
+  preload/       安全 contextBridge API
   renderer/
     components/  Widget
-    dialogs/     建立與匯入流程
-    hooks/       跨話進度
+    dialogs/     匯入確認
     pages/       設定頁
     stores/      Zustand
     styles/
@@ -63,94 +252,27 @@ src/
     types/
     validation/
 tests/
-  calculations/
-  date/
-  excel/
+docs/images/
 examples/
-  legacy-vol2.xlsx
-  mangasprint-sample.xlsx
 ```
 
-## 開發環境
+## 安全設計
 
-建議 Windows 10/11 x64、Node.js 22 LTS。此工作區以 Node.js 20 完成建置，但最新版 Electron 打包子工具會提示 Node.js 22 engine 建議。開發不需要 Rust、Visual Studio C++ toolchain、資料庫或後端伺服器。
-
-```powershell
-npm install
-npm run dev
-```
-
-`npm run dev` 會啟動 electron-vite 與 Electron。正式版只載入打包進 `out/renderer` 的本機頁面。
-
-## 驗證
-
-```powershell
-npm run typecheck
-npm run lint
-npm run test
-npm run build
-```
-
-測試涵蓋累計頁數、進度差、百分比、跨話 ±1、本機日期、Excel 工作表結構及舊檔 fixture 匯入。
-
-## Windows 打包
-
-```powershell
-npm run dist:win
-```
-
-輸出位於：
-
-```text
-release/MangaSprint-0.1.0-x64.exe
-```
-
-這是 NSIS x64 安裝程式，可選安裝位置，並建立桌面與開始功能表捷徑。解除安裝預設保留使用者資料，避免誤刪尚未同步進度。
-
-目前未提供正式品牌 icon，electron-builder 會使用 Electron 預設圖示。發佈前請加入至少 256 × 256 的 Windows `.ico`，並在 `package.json > build.win.icon` 指定。
-
-目前安裝程式沒有商用程式碼簽章；Windows SmartScreen 可能顯示未知發行者。正式公開發佈前應配置可信任的 Windows code-signing certificate。
-
-## 第一次使用
-
-1. 啟動 App，按「新建」。
-2. 填寫專案名稱、話數、標題、總頁數、開始日及目標日。
-3. 選擇 `.xlsx` 儲存位置。
-4. 每完成一頁按「＋1 頁」。
-5. 設定視窗可調整透明度、置頂、位置鎖定及開機啟動。
-
-預設範例專案為 MangaSprint Vol.2，包含 Chapter 11（18 頁）、Chapter 12（18 頁）、Chapter 13（20 頁）。
-
-## 匯入 vol2.xlsx
-
-1. 按「匯入」並選擇 `vol2.xlsx`。
-2. 匯入器只讀取原始檔，不會覆寫或另存原檔。
-3. 支援 `ch11.完稿進度%`、百分比數值 `0.5`、數字 `50`、文字 `"50%"`，以及 Excel／JS／文字日期。
-4. 補填每話總頁數。
-5. App 在原檔同資料夾建立 `vol2-MangaSprint.xlsx`。
-
-可用 [舊檔 fixture](examples/legacy-vol2.xlsx) 測試匯入；[新版 fixture](examples/mangasprint-sample.xlsx) 展示正式四工作表結構。
-
-## Excel 同步與備份
-
-每次進度操作的順序：
-
-1. 驗證 chapter、page 與日期。
-2. 寫入 electron-store，標記 pending sync。
-3. 更新今日唯一一筆 DailyHistory。
-4. 在正式檔旁的 `backups` 建立時間戳備份。
-5. 寫入同資料夾臨時 `.xlsx`。
-6. 重新讀取臨時檔並確認四個必要工作表。
-7. 替換正式檔；若失敗，還原原檔並保留待同步狀態。
-
-備份預設保留 30 天。程式不修改匯入來源 `vol2.xlsx`。
+- `contextIsolation: true`
+- `nodeIntegration: false`
+- Renderer sandbox
+- Renderer 不直接讀寫任意本機檔案
+- Excel 路徑由原生選檔器或拖放取得
+- Main process 驗證檔案、副檔名、話數、頁數及日期
+- 不執行任意 shell 指令
+- 不載入遠端網頁
+- 不使用雲端資料庫、登入或付費 API
 
 ## 已知限制
 
-- 舊 Excel 版型差異很大；MVP 支援 `chXX...%` 及一般列式格式，但沒有互動式欄位映射器。
-- SheetJS 社群版建立的新檔包含資料、欄寬與 AutoFilter，但不複製舊檔巨集、圖表、進階條件格式或原樣式。
-- 系統匣目前使用內建極簡圖像；正式品牌 icon 尚待替換。
-- 安裝程式未簽章，公開散布時可能觸發 Windows SmartScreen。
-- App 內沒有完整的話數編輯／重排頁面；建立專案後主要聚焦每日進度。
-- 備份依檔案修改時間清理，沒有 UI 可調整保留天數。
-- npm audit 可能回報來自打包工具鏈或 SheetJS 的相依性公告；發佈前應逐項評估，不應直接使用破壞性 `npm audit fix --force`。
+- 僅支援 Windows x64。
+- 安裝程式目前沒有程式碼簽章，可能觸發 SmartScreen。
+- 沒有雲端同步或多電腦衝突合併。
+- 匯入 MangaSprint Excel 時會恢復話數、總頁數、實際進度及日期，但不會搬移視窗位置等本機設定。
+- Excel 的複雜舊格式不會原樣保留；舊檔只讀，程式會建立自己的新版工作簿。
+- 請只匯入來源可信的 `.xlsx`。

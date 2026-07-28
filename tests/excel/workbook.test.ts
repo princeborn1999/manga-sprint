@@ -30,6 +30,28 @@ describe("MangaSprint workbook", () => {
     expect(rows[1][5]).toBe(10);
     expect(rows[1][6]).toBe("completed");
   });
+  it("reimports a MangaSprint workbook while preserving totals and progress", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "mangasprint-reimport-"));
+    const file = path.join(directory, "GorillaSprint-MangaSprint.xlsx");
+    try {
+      const portableState = structuredClone(state);
+      portableState.chapters[0].totalPages = 20;
+      XLSX.writeFile(workbookFromState(portableState), file);
+
+      const preview = importLegacy(file);
+
+      expect(preview.preserveTotalPages).toBe(true);
+      expect(preview.projectName).toBe("GorillaSprint");
+      expect(preview.chapters[0]).toMatchObject({
+        chapterNumber: 11,
+        totalPages: 20,
+        actualCompletedPages: 12,
+        actualValueIsPercent: false,
+      });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
   it("imports the real legacy fixture without modifying it", () => {
     const result = importLegacy("examples/legacy-vol2.xlsx");
     expect(result.chapters.map((chapter) => chapter.chapterNumber)).toEqual([11,12,13]);

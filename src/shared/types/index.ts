@@ -94,6 +94,7 @@ export interface LegacyImportPreview {
   projectName: string;
   chapters: LegacyImportChapter[];
   missingTotalPages: number[];
+  preserveTotalPages?: boolean;
 }
 
 export interface OperationResult { ok: boolean; message: string; path?: string }

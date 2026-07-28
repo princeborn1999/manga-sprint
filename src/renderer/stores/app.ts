@@ -50,7 +50,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   async finishImport(defaultTotalPages) {
     const preview = get().importPreview;
     if (!preview) return;
-    const totals = Object.fromEntries(preview.chapters.map((chapter) => [chapter.chapterNumber, defaultTotalPages]));
+    const totals = Object.fromEntries(preview.chapters.map((chapter) => [
+      chapter.chapterNumber,
+      preview.preserveTotalPages ? chapter.totalPages ?? defaultTotalPages : defaultTotalPages,
+    ]));
     await perform(set, async () => {
       const result = await window.mangaSprint.importLegacyExcel({ path: preview.sourcePath, totals });
       if ("settings" in result) { set({ state: result, importPreview: undefined, notice: "舊 Excel 已匯入，新檔已建立" }); return result; }

@@ -100,9 +100,50 @@ function dateValue(value: unknown): string {
   return optionalDateValue(value) ?? localDate();
 }
 
+function importMangaSprintWorkbook(workbook: XLSX.WorkBook, sourcePath: string): LegacyImportPreview {
+  const sheet = workbook.Sheets.Chapters;
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true });
+  const headers = rows[0]?.map((value) => String(value ?? "")) ?? [];
+  const column = (name: string) => headers.indexOf(name);
+  const required = ["ChapterNumber", "Title", "TotalPages", "StartDate", "TargetEndDate", "ActualCompletedPages"];
+  if (required.some((name) => column(name) < 0)) throw new Error("MangaSprint Excel 的 Chapters 欄位不完整");
+
+  const integer = (value: unknown): number | undefined => {
+    const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value.trim()) : Number.NaN;
+    return Number.isFinite(parsed) ? Math.round(parsed) : undefined;
+  };
+  const chapters: LegacyImportPreview["chapters"] = [];
+  for (const row of rows.slice(1)) {
+    const chapterNumber = integer(row[column("ChapterNumber")]);
+    const totalPages = integer(row[column("TotalPages")]);
+    const actualCompletedPages = integer(row[column("ActualCompletedPages")]);
+    if (!chapterNumber || chapterNumber <= 0 || actualCompletedPages === undefined) continue;
+    chapters.push({
+      chapterNumber,
+      title: String(row[column("Title")] ?? `Chapter ${chapterNumber}`),
+      totalPages,
+      actualCompletedPages,
+      actualValueIsPercent: false,
+      startDate: dateValue(row[column("StartDate")]),
+      targetEndDate: dateValue(row[column("TargetEndDate")]),
+      actualCompletedDate: optionalDateValue(row[column("ActualCompletedDate")]),
+    });
+  }
+  if (!chapters.length) throw new Error("MangaSprint Excel 沒有可匯入的話數");
+  const fileName = path.basename(sourcePath, ".xlsx");
+  return {
+    sourcePath,
+    projectName: fileName.replace(/-MangaSprint$/i, ""),
+    chapters,
+    missingTotalPages: chapters.filter((chapter) => !chapter.totalPages).map((chapter) => chapter.chapterNumber),
+    preserveTotalPages: true,
+  };
+}
+
 export function importLegacy(filePath: string): LegacyImportPreview {
   const sourcePath = assertXlsx(filePath);
   const workbook = XLSX.readFile(sourcePath, { cellDates: true });
+  if (workbook.SheetNames.includes("Chapters")) return importMangaSprintWorkbook(workbook, sourcePath);
   const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[workbook.SheetNames[0]], { header: 1, raw: true });
   const chapters: LegacyImportPreview["chapters"] = [];
   for (let r = 0; r < rows.length; r += 1) {
