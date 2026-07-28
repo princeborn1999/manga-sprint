@@ -6,6 +6,27 @@ MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。�
 
 > 文件截圖使用示範資料，不包含使用者私人檔案或實際路徑。
 
+## 下載
+
+一般使用者不需要下載原始碼，也不需要安裝 Node.js。請到
+[GitHub Releases](https://github.com/princeborn1999/MangaSprint/releases/latest)
+下載最新的 Windows x64 安裝程式：
+
+```text
+MangaSprint-0.1.0-x64.exe
+```
+
+Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub 首頁自動產生的
+`Source code (zip)` 當成安裝程式。
+
+## 5 分鐘快速開始
+
+1. 從 [Releases](https://github.com/princeborn1999/MangaSprint/releases/latest) 下載並執行安裝程式。
+2. Windows SmartScreen 若出現警告，確認發行者與下載來源後，按「其他資訊」→「仍要執行」。
+3. 開啟 MangaSprint，將自己的 `.xlsx` 拖進 Widget；想先試用可匯入 Release 內的範例檔。
+4. 在匯入畫面確認話數範圍與預設每話 18 頁，按「匯入並建立」。
+5. 用 `＋1 頁`、`−1 頁` 更新進度。畫面顯示「已同步」代表 Excel 也已更新。
+
 ## 主要功能
 
 - 固定在螢幕頂端的無邊框 Widget。
@@ -27,7 +48,8 @@ MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。�
 
 ## 安裝
 
-執行 Windows x64 安裝程式：
+從 [GitHub Releases](https://github.com/princeborn1999/MangaSprint/releases/latest)
+下載並執行 Windows x64 安裝程式：
 
 ```text
 MangaSprint-0.1.0-x64.exe
@@ -36,6 +58,9 @@ MangaSprint-0.1.0-x64.exe
 目前安裝程式沒有商業程式碼簽章，Windows SmartScreen 可能顯示警告。請確認檔案來源可信，再選擇「其他資訊」→「仍要執行」。
 
 安裝完成後可以從桌面捷徑或開始功能表開啟 MangaSprint。
+
+若想在不影響正式資料的情況下先試用，請先匯入
+[`examples/mangasprint-sample.xlsx`](examples/mangasprint-sample.xlsx)。
 
 ## 第一次使用：匯入 Excel
 
@@ -183,6 +208,52 @@ MangaSprint 使用 `electron-store` 保存即時狀態。
 每話總頁數與實際完成頁數會保留。視窗位置、透明度及開機啟動屬於每台電腦的本機設定，需要在新電腦重新設定。
 
 不要讓兩台電腦同時修改各自的 Excel；目前沒有雲端合併功能。
+
+## 常見問題與排除方式
+
+### 拖入 Excel 沒有反應
+
+- 確認檔案副檔名是 `.xlsx`，不是舊式 `.xls`、CSV 或 Google Sheets 捷徑。
+- 改用 Widget 內的「匯入 Excel」按鈕選取檔案。
+- 關閉正在顯示匯入畫面的其他 MangaSprint 視窗；App 只允許一個執行個體。
+- 仍失敗時，先用本專案的範例檔測試，以判斷是檔案格式或 App 問題。
+
+### 一直顯示「待同步」
+
+1. 關閉 Microsoft Excel 或其他正在開啟 MangaSprint 工作簿的程式。
+2. 從系統匣開啟 MangaSprint，按「立即同步 Excel」。
+3. 確認狀態變成「已同步」後再複製或搬移工作簿。
+
+即使同步失敗，最新操作仍保存在 App 的本機 Store；不要急著重新匯入舊 Excel，以免把目前畫面切換成另一份專案。
+
+### 關閉視窗後 App 還在
+
+這是預期行為。關閉按鈕會將 Widget 隱藏到 Windows 系統匣，避免誤關。要完全結束，請在系統匣圖示上開啟選單並選「結束程式」。
+
+### 找不到 Widget
+
+- 從系統匣選單選「顯示 Widget」。
+- 再次從桌面或開始功能表開啟 MangaSprint，既有視窗會被顯示並聚焦，不會產生第二個 Widget。
+
+### 如何備份
+
+- 一般進度同步時，程式會在替換 Excel 前建立備份。
+- 需要立即備份時，可在設定頁按「手動建立 Excel 備份」。
+- 跨電腦搬移前，最重要的是複製狀態已為「已同步」的 `*-MangaSprint.xlsx`。
+
+## 解除安裝與資料保留
+
+- 從 Windows「設定」→「應用程式」解除安裝 MangaSprint。
+- 解除安裝程式預設不刪除 App 的本機 Store，重新安裝後仍有機會恢復原狀態。
+- 你選取的原始 Excel、MangaSprint Excel 與備份不會隨 App 解除安裝而刪除。
+- 若要永久清除資料，請先自行備份 Excel，再移除 MangaSprint 的使用者資料；操作前請確認路徑，避免刪到其他 Electron App 的資料。
+
+## 隱私與資料範圍
+
+- MangaSprint 是本機 App，不需要登入，也不會把漫畫進度上傳到 GitHub。
+- 公開的是程式原始碼、文件、示範截圖、範例 Excel 與安裝程式。
+- 你的個人 Excel 只會由本機 App 讀寫；除非你自己上傳或分享，否則不會出現在 repository 或 Release。
+- 錯誤紀錄不應包含工作簿內容；回報問題前仍建議先檢查截圖與附件是否含私人資訊。
 
 ## 開發
 
