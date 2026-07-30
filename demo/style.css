@@ -65,11 +65,43 @@ nav > div {
   color: #c8bbcddd;
 }
 
+.nav-actions {
+  white-space: nowrap;
+}
+
 .nav-download {
   padding: 10px 16px;
   border: 1px solid #d888ec55;
   border-radius: 999px;
   color: #f3d3fb;
+}
+
+.language-switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 2px;
+  color: #746878;
+}
+
+.language-switch button {
+  padding: 4px 2px;
+  border: 0;
+  color: #897d8e;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.language-switch button:hover,
+.language-switch button.active {
+  color: #efc6f8;
+}
+
+.language-switch button.active {
+  text-decoration: underline;
+  text-decoration-color: #d273e6;
+  text-underline-offset: 4px;
 }
 
 .intro {
@@ -567,6 +599,14 @@ h1 em {
   }
 
   nav > div > a:first-child {
+    display: none;
+  }
+
+  nav > div {
+    gap: 12px;
+  }
+
+  .nav-download {
     display: none;
   }
 
