@@ -13,6 +13,8 @@
     "test": "vitest run",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
+    "demo:dev": "vite --config vite.demo.config.ts",
+    "demo:build": "tsc --noEmit -p tsconfig.demo.json && vite build --config vite.demo.config.ts",
     "dist:win": "npm run build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1"
   },
   "dependencies": {
@@ -48,9 +50,32 @@
     "productName": "MangaSprint",
     "artifactName": "MangaSprint-${version}-${arch}.${ext}",
     "asar": true,
-    "directories": {"output":"release"},
-    "files": ["out/**/*","package.json"],
-    "win": {"target":[{"target":"nsis","arch":["x64"]}],"signAndEditExecutable":false,"signExecutable":false},
-    "nsis": {"script":"build/installer.nsi","oneClick":false,"allowToChangeInstallationDirectory":true,"createDesktopShortcut":true,"createStartMenuShortcut":true,"deleteAppDataOnUninstall":false}
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false,
+      "signExecutable": false
+    },
+    "nsis": {
+      "script": "build/installer.nsi",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }

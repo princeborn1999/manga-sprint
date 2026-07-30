@@ -3,6 +3,7 @@ dist
 out
 release
 outputs
+demo-dist
 .artifact-build
 *.log
 .DS_Store

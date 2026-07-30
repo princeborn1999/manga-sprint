@@ -6,6 +6,13 @@ MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。�
 
 > 文件截圖使用示範資料，不包含使用者私人檔案或實際路徑。
 
+## 線上互動 Demo
+
+不想先安裝也可以直接開啟
+[MangaSprint Web Demo](https://princeborn1999.github.io/MangaSprint/)。
+
+Demo 使用固定的匿名示範資料，可以體驗展開／縮小、增減完成頁數及調整總頁數。它不會讀取、上傳或保存你的 Excel；Excel 同步、系統匣、開機啟動與桌面置頂是 Windows 安裝版限定功能。
+
 ## 下載
 
 一般使用者不需要下載原始碼，也不需要安裝 Node.js。請到

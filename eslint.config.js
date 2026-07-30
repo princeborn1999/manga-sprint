@@ -4,7 +4,16 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 export default tseslint.config(
-  { ignores: ["dist", "out", "release", "node_modules", ".artifact-build"] },
+  {
+    ignores: [
+      "dist",
+      "demo-dist",
+      "out",
+      "release",
+      "node_modules",
+      ".artifact-build",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -16,11 +25,20 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
     },
   },
   {
-    files: ["src/main/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts", "tests/**/*.ts", "*.config.ts"],
+    files: [
+      "src/main/**/*.ts",
+      "src/preload/**/*.ts",
+      "src/shared/**/*.ts",
+      "tests/**/*.ts",
+      "*.config.ts",
+    ],
     languageOptions: { globals: globals.node },
   },
 );
