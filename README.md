@@ -9,14 +9,14 @@ MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。�
 ## 線上互動 Demo
 
 不想先安裝也可以直接開啟
-[MangaSprint Web Demo](https://princeborn1999.github.io/MangaSprint/)。
+[MangaSprint Web Demo](https://princeborn1999.github.io/manga-sprint/)。
 
 Demo 使用固定的匿名示範資料，可以體驗展開／縮小、增減完成頁數及調整總頁數。它不會讀取、上傳或保存你的 Excel；Excel 同步、系統匣、開機啟動與桌面置頂是 Windows 安裝版限定功能。
 
 ## 下載
 
 一般使用者不需要下載原始碼，也不需要安裝 Node.js。請到
-[GitHub Releases](https://github.com/princeborn1999/MangaSprint/releases/latest)
+[GitHub Releases](https://github.com/princeborn1999/manga-sprint/releases/latest)
 下載最新的 Windows x64 安裝程式：
 
 ```text
@@ -28,7 +28,7 @@ Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub �
 
 ## 5 分鐘快速開始
 
-1. 從 [Releases](https://github.com/princeborn1999/MangaSprint/releases/latest) 下載並執行安裝程式。
+1. 從 [Releases](https://github.com/princeborn1999/manga-sprint/releases/latest) 下載並執行安裝程式。
 2. Windows SmartScreen 若出現警告，確認發行者與下載來源後，按「其他資訊」→「仍要執行」。
 3. 開啟 MangaSprint，將自己的 `.xlsx` 拖進 Widget；想先試用可匯入 Release 內的範例檔。
 4. 在匯入畫面確認話數範圍與預設每話 18 頁，按「匯入並建立」。
@@ -55,7 +55,7 @@ Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub �
 
 ## 安裝
 
-從 [GitHub Releases](https://github.com/princeborn1999/MangaSprint/releases/latest)
+從 [GitHub Releases](https://github.com/princeborn1999/manga-sprint/releases/latest)
 下載並執行 Windows x64 安裝程式：
 
 ```text

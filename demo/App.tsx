@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import "./style.css";
 
 const RELEASE_URL =
-  "https://github.com/princeborn1999/MangaSprint/releases/latest";
-const REPOSITORY_URL = "https://github.com/princeborn1999/MangaSprint";
+  "https://github.com/princeborn1999/manga-sprint/releases/latest";
+const REPOSITORY_URL = "https://github.com/princeborn1999/manga-sprint";
 
 type Language = "en" | "zh";
 

@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   root: "demo",
-  base: "/MangaSprint/",
+  base: "/manga-sprint/",
   plugins: [react()],
   build: {
     outDir: "../demo-dist",
