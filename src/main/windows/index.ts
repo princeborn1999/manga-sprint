@@ -5,6 +5,7 @@ import type { MangaState } from "../../shared/types";
 
 let widget: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let postStudioWindow: BrowserWindow | null = null;
 let quitting = false;
 let layoutState: MangaState | null = null;
 let applyingLayout = false;
@@ -104,6 +105,23 @@ export function openSettings(): void {
   });
   settingsWindow.on("closed", () => { settingsWindow = null; });
   rendererUrl(settingsWindow, "settings");
+}
+
+export function openPostStudio(): void {
+  if (postStudioWindow) { postStudioWindow.show(); postStudioWindow.focus(); return; }
+  postStudioWindow = new BrowserWindow({
+    width: 1180, height: 780, minWidth: 920, minHeight: 640, title: "MangaSprint — 發文工作室",
+    backgroundColor: "#1e1826", show: false,
+    webPreferences: { preload: path.join(__dirname, "../preload/index.cjs"), contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  postStudioWindow.on("closed", () => { postStudioWindow = null; });
+  postStudioWindow.once("ready-to-show", () => { postStudioWindow?.show(); postStudioWindow?.focus(); });
+  postStudioWindow.webContents.once("dom-ready", () => { postStudioWindow?.show(); postStudioWindow?.focus(); });
+  postStudioWindow.webContents.on("did-fail-load", (_event, code, description) => {
+    postStudioWindow?.setTitle(`Post Studio load error ${code}: ${description}`);
+    postStudioWindow?.show();
+  });
+  rendererUrl(postStudioWindow, "post-studio");
 }
 
 export function getWidget(): BrowserWindow | null { return widget; }

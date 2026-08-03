@@ -46,6 +46,21 @@ Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub �
 - 自動同步及手動同步 Excel。
 - Excel 寫入前建立備份、使用臨時檔驗證，再替換正式檔案。
 - 系統匣、永遠置頂、透明度及開機啟動設定。
+- 發文工作室（Post Studio）以獨立大型視窗準備 X、Instagram、Pixiv 與 MANGA Plus Creators；不會放大或取代原本 Widget。
+
+## 發文工作室（Post Studio）
+
+1. 在 MangaSprint 系統匣選單按「發文工作室」。
+2. 建立 Post Project，填入作品、Chapter、內容重點、閱讀連結及發布日期。
+3. 按「Add images」選擇 JPG、JPEG、PNG 或 WEBP；原始圖片不會被複製，只保存路徑。
+4. 按「Generate all platforms」，再從平台 Tab 修改文案並分別選取圖片。
+5. 使用「Copy all」複製內容，再用「Open platform」於預設瀏覽器開啟官方網站。
+6. 手動標記 Ready、Published、Skipped 或 Failed；Published 會保存當時文案和圖片路徑。
+7. Templates 頁面可以修改或恢復各平台模板。
+
+模板支援 `{{workTitle}}`、`{{englishWorkTitle}}`、`{{chapterNumber}}`、`{{chapterTitle}}`、`{{englishChapterTitle}}`、`{{shortHighlight}}`、`{{readingUrl}}`、`{{publishDate}}`。
+
+Post Studio 由獨立的 `mangasprint-post-studio` electron-store 保存在本機使用者資料目錄。第一版不會登入平台、不保存密碼，也不支援自動發布、排程或雲端同步。圖片若被移動或刪除，重新開啟時會標示 Missing。
 
 ## 系統需求
 

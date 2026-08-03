@@ -1,6 +1,6 @@
 import { Menu, Tray, app, nativeImage } from "electron";
 import { getState, saveState } from "../storage";
-import { getWidget, hideWidget, openSettings, quitApp, showWidget } from "../windows";
+import { getWidget, hideWidget, openPostStudio, openSettings, quitApp, showWidget } from "../windows";
 
 let tray: Tray | null = null;
 
@@ -13,6 +13,7 @@ export function createTray(sync: () => Promise<void>): Tray {
     { label: "隱藏 Widget", click: hideWidget },
     { label: "永遠置頂", type: "checkbox", checked: getState().settings.alwaysOnTop, click: (item) => { const state = getState(); state.settings.alwaysOnTop = item.checked; saveState(state); getWidget()?.setAlwaysOnTop(item.checked); } },
     { type: "separator" },
+    { label: "發文工作室", click: openPostStudio },
     { label: "立即同步 Excel", click: () => void sync() },
     { label: "設定", click: openSettings },
     { type: "separator" },

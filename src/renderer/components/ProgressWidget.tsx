@@ -126,6 +126,7 @@ export function ProgressWidget() {
       <span className={`sync ${state.settings.syncStatus}`}>{state.settings.hasPendingSync ? "● 待寫入 Excel" : "● 已同步"}</span>
       <button onClick={() => void sync()} disabled={busy || !state.settings.excelFilePath}>同步</button>
       <button onClick={() => void previewImport()}>匯入</button>
+      <button onClick={() => void window.mangaSprint.openPostStudio()}>發文</button>
     </footer>
     {(error || notice) && <button className={`toast ${error ? "bad" : ""}`} onClick={() => useAppStore.getState().clearMessage()}>{error ?? notice}</button>}
     <ImportDialog />

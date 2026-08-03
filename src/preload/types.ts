@@ -1,4 +1,5 @@
 import type { AppSettings, ChapterTotalPagesUpdate, LegacyImportPreview, MangaState, OperationResult, ProgressPoint } from "../shared/types";
+import type { PostProject, PostStudioState, PostTemplate, SelectedPostImage } from "../shared/post-studio/types";
 
 export interface ChapterInput { chapterNumber: number; title: string; totalPages: number; startDate: string; targetEndDate: string }
 export interface ImportRequest { path: string; totals?: Record<number, number> }
@@ -21,6 +22,17 @@ export interface MangaSprintApi {
   horizontalDragMove(screenX: number): void;
   horizontalDragEnd(): void;
   openSettings(): Promise<void>;
+  openPostStudio(): Promise<void>;
+  getPostStudioState(): Promise<PostStudioState>;
+  createPostProject(chapterNumber?: number): Promise<PostProject>;
+  savePostProject(project: PostProject): Promise<PostStudioState>;
+  deletePostProject(id: string): Promise<PostStudioState>;
+  duplicatePostProject(id: string): Promise<PostStudioState>;
+  savePostTemplates(templates: PostTemplate[]): Promise<PostStudioState>;
+  choosePostImages(): Promise<SelectedPostImage[]>;
+  getPostImagePreview(path: string): Promise<string | null>;
+  copyPostText(text: string): Promise<void>;
+  openPostPlatform(platform: "x" | "instagram" | "pixiv" | "mangaPlus"): Promise<void>;
   hideWindow(): Promise<void>;
   exitApp(): Promise<void>;
 }

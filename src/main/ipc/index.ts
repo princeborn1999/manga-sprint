@@ -1,7 +1,10 @@
-import { app, dialog, ipcMain } from "electron";
+import { app, clipboard, dialog, ipcMain, shell } from "electron";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { AppSettings, ChapterTotalPagesUpdate, LegacyImportPreview, MangaState, ProgressPoint } from "../../shared/types";
 import type { ChapterInput, ImportRequest } from "../../preload/types";
+import type { PlatformType, PostProject, PostTemplate, SelectedPostImage } from "../../shared/post-studio/types";
+import { PLATFORM_TYPES } from "../../shared/post-studio/templates";
 import { EXPANDED_WIDGET_OPACITY, IPC } from "../../shared/constants";
 import { buildDailyPlan } from "../../shared/calculations";
 import { validateChapter, validateSettings } from "../../shared/validation";
@@ -9,6 +12,8 @@ import { completeLegacyImport, createBackup, importLegacy, syncWorkbook } from "
 import { addEvent, getState, saveState } from "../storage";
 import { applyChapterTotalPages, applyProgress, chaptersFromInput } from "../services/progress";
 import { applyWidgetLayout, endHorizontalDrag, getWidget, hideWidget, moveHorizontalDrag, openSettings, quitApp, startHorizontalDrag } from "../windows";
+import { openPostStudio } from "../windows";
+import { createPostProject, deletePostProject, duplicatePostProject, getPostStudioState, isSavedImagePath, savePostStudioState, upsertPostProject } from "../post-studio/storage";
 
 function safeError(error: unknown): Error {
   return new Error(error instanceof Error ? error.message : String(error));
@@ -153,6 +158,59 @@ export function registerIpc(): void {
     saveState(state);
   });
   ipcMain.handle(IPC.openSettings, () => openSettings());
+  ipcMain.handle(IPC.openPostStudio, () => openPostStudio());
+  ipcMain.handle(IPC.getPostStudioState, async () => {
+    const state = getPostStudioState();
+    state.projects = await Promise.all(state.projects.map(async (project) => ({ ...project, images: await Promise.all(project.images.map(async (image) => {
+      try { await readFile(image.path); return { ...image, missing: false }; } catch { return { ...image, missing: true }; }
+    })) })));
+    return state;
+  });
+  ipcMain.handle(IPC.createPostProject, (_event, chapterNumber?: number) => createPostProject(Number.isInteger(chapterNumber) ? chapterNumber : 1));
+  ipcMain.handle(IPC.savePostProject, (_event, project: PostProject) => upsertPostProject(project));
+  ipcMain.handle(IPC.deletePostProject, (_event, id: string) => deletePostProject(id));
+  ipcMain.handle(IPC.duplicatePostProject, (_event, id: string) => duplicatePostProject(id));
+  ipcMain.handle(IPC.savePostTemplates, (_event, templates: PostTemplate[]) => {
+    if (!Array.isArray(templates) || templates.length !== PLATFORM_TYPES.length) throw new Error("模板資料無效");
+    const state = getPostStudioState();
+    for (const template of templates) {
+      if (!PLATFORM_TYPES.includes(template.platform) || [template.title, template.content, template.tags].some((value) => typeof value !== "string" || value.length > 20_000)) throw new Error("模板資料無效");
+      state.templates[template.platform] = template;
+    }
+    return savePostStudioState(state);
+  });
+  ipcMain.handle(IPC.choosePostImages, async (): Promise<SelectedPostImage[]> => {
+    const result = await dialog.showOpenDialog({ title: "選擇發文圖片", properties: ["openFile", "multiSelections"], filters: [{ name: "Images", extensions: ["jpg", "jpeg", "png", "webp"] }] });
+    if (result.canceled) return [];
+    return Promise.all(result.filePaths.map(async (filePath) => {
+      const extension = path.extname(filePath).toLowerCase();
+      if (![".jpg", ".jpeg", ".png", ".webp"].includes(extension)) throw new Error("圖片格式無效");
+      const bytes = await readFile(filePath);
+      const mime = extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg";
+      return { id: crypto.randomUUID(), path: filePath, fileName: path.basename(filePath), extension, missing: false, previewDataUrl: `data:${mime};base64,${bytes.toString("base64")}` };
+    }));
+  });
+  ipcMain.handle(IPC.getPostImagePreview, async (_event, filePath: string) => {
+    if (typeof filePath !== "string" || !isSavedImagePath(filePath)) return null;
+    const extension = path.extname(filePath).toLowerCase();
+    if (![".jpg", ".jpeg", ".png", ".webp"].includes(extension)) return null;
+    try {
+      const bytes = await readFile(filePath);
+      const mime = extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg";
+      return `data:${mime};base64,${bytes.toString("base64")}`;
+    } catch { return null; }
+  });
+  ipcMain.handle(IPC.copyPostText, (_event, text: string) => {
+    if (typeof text !== "string" || text.length > 100_000) throw new Error("複製內容無效");
+    clipboard.writeText(text);
+  });
+  ipcMain.handle(IPC.openPostPlatform, async (_event, platform: PlatformType) => {
+    if (!PLATFORM_TYPES.includes(platform)) throw new Error("平台無效");
+    const url = getPostStudioState().platformUrls[platform];
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") throw new Error("平台網址不安全");
+    await shell.openExternal(url);
+  });
   ipcMain.handle(IPC.hideWindow, () => hideWidget());
   ipcMain.handle(IPC.exitApp, () => quitApp());
 }

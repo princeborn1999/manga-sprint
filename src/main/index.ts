@@ -2,7 +2,7 @@ import { app } from "electron";
 import { registerIpc, syncCurrent } from "./ipc";
 import { createTray } from "./tray";
 import { getState, saveState } from "./storage";
-import { createWidget, setQuitting, showWidget } from "./windows";
+import { createWidget, openPostStudio, setQuitting, showWidget } from "./windows";
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
@@ -19,6 +19,7 @@ else {
       if (latest.settings.dockPosition === "top-center" || latest.settings.dockPosition === "top-right") latest.settings.dockPosition = "top-free";
       return saveState(latest);
     });
+    if (process.argv.includes("--post-studio")) openPostStudio();
     createTray(async () => { await syncCurrent(); });
   });
   app.on("window-all-closed", () => { /* tray app remains active */ });
