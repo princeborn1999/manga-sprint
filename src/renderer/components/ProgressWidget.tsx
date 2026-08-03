@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { currentChapter, cumulativePages, percent } from "../../shared/calculations";
+import { chapterProgressPercent, currentChapter, cumulativePages } from "../../shared/calculations";
 import { localDate } from "../../shared/date";
 import { useAppStore } from "../stores/app";
 import { moveProgress } from "../hooks/useProgress";
@@ -82,6 +82,7 @@ export function ProgressWidget() {
   const idealTotal = plan ? cumulativePages(state.chapters, { chapterNumber: plan.chapterNumber, page: plan.idealPage }) : 0;
   const gap = actualTotal - idealTotal;
   const idealPercent = plan?.idealPercent ?? 0;
+  const actualPercent = chapterProgressPercent(chapter);
   const change = (delta: -1 | 1) => { const point = moveProgress(state.chapters, delta); if (point) void updateProgress(point); };
   const changeTotalPages = (delta: -1 | 1) => {
     const totalPages = chapter.totalPages + delta;
@@ -109,9 +110,9 @@ export function ProgressWidget() {
           <button className="total-page-button" aria-label="總頁數增加一頁" title="增加一頁" disabled={busy} onClick={() => changeTotalPages(1)}>＋</button>
         </div>
         <span>頁</span>
-        <em>{percent(chapter.actualCompletedPages, chapter.totalPages)}%</em>
+        <em>{actualPercent}%</em>
       </div>
-      <div className="track"><i style={{ width: `${percent(chapter.actualCompletedPages, chapter.totalPages)}%` }} /></div>
+      <div className="track"><i style={{ width: `${actualPercent}%` }} /></div>
     </section>
     <section className={`pace-summary ${gap < 0 ? "behind" : gap > 0 ? "ahead" : "on-track"}`}>
       <div><span>理想進度</span><b>{idealPercent}%</b></div>
@@ -119,7 +120,7 @@ export function ProgressWidget() {
     </section>
     <section className="actions no-drag">
       <button className="step minus" disabled={busy} onClick={() => change(-1)}>−1</button>
-      <button className="step plus" disabled={busy} onClick={() => change(1)}>＋1 頁</button>
+      <button className="step plus" disabled={busy} onClick={() => change(1)}>{chapter.actualCompletedPages === chapter.totalPages && !chapter.dialogueComplete ? "完成台詞 +1%" : "＋1 頁"}</button>
     </section>
     <footer className="no-drag">
       <span className={`sync ${state.settings.syncStatus}`}>{state.settings.hasPendingSync ? "● 待寫入 Excel" : "● 已同步"}</span>

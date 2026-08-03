@@ -28,7 +28,8 @@ describe("MangaSprint workbook", () => {
 
     expect(rows[1][2]).toBe(10);
     expect(rows[1][5]).toBe(10);
-    expect(rows[1][6]).toBe("completed");
+    expect(rows[1][6]).toBe("in-progress");
+    expect(rows[1][10]).toBe(false);
   });
   it("reimports a MangaSprint workbook while preserving totals and progress", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "mangasprint-reimport-"));
@@ -47,6 +48,7 @@ describe("MangaSprint workbook", () => {
         totalPages: 20,
         actualCompletedPages: 12,
         actualValueIsPercent: false,
+        dialogueComplete: false,
       });
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -59,6 +61,15 @@ describe("MangaSprint workbook", () => {
     expect(result.chapters[0]).toMatchObject({ startDate:"2026-07-27",targetEndDate:"2026-07-27",actualCompletedPages:50,actualValueIsPercent:true,totalPages:18 });
     const imported = completeLegacyImport(result, { 11:18,12:18,13:18 });
     expect(imported.map((chapter) => chapter.actualCompletedPages)).toEqual([9,9,0]);
+  });
+  it("imports legacy 99% as all pages drawn but dialogue unfinished", () => {
+    const imported = completeLegacyImport({
+      sourcePath: "legacy.xlsx",
+      projectName: "Legacy",
+      chapters: [{ chapterNumber: 18, actualCompletedPages: 99, actualValueIsPercent: true, totalPages: 18 }],
+      missingTotalPages: [],
+    }, {});
+    expect(imported[0]).toMatchObject({ actualCompletedPages: 18, dialogueComplete: false, status: "in-progress" });
   });
   it("imports three-column horizontal chapters and ignores progress regression", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "mangasprint-horizontal-"));

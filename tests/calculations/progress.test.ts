@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Chapter } from "../../src/shared/types";
-import { cumulativePages, differencePages, paceStatus, percent } from "../../src/shared/calculations";
+import { chapterProgressPercent, cumulativePages, differencePages, paceStatus, percent } from "../../src/shared/calculations";
 
 const now = "2026-07-27T00:00:00.000Z";
 const chapters: Chapter[] = [
@@ -21,5 +21,9 @@ describe("progress calculations", () => {
     expect(percent(16,18)).toBe(89);
     expect(percent(12,18)).toBe(67);
     expect(percent(18,18)).toBe(100);
+  });
+  it("reserves the final 1% for dialogue finishing", () => {
+    expect(chapterProgressPercent({ actualCompletedPages: 18, totalPages: 18, dialogueComplete: false })).toBe(99);
+    expect(chapterProgressPercent({ actualCompletedPages: 18, totalPages: 18, dialogueComplete: true })).toBe(100);
   });
 });

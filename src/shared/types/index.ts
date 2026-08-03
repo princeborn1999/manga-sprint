@@ -11,6 +11,7 @@ export interface Chapter {
   startDate: string;
   targetEndDate: string;
   actualCompletedPages: number;
+  dialogueComplete?: boolean;
   status: ChapterStatus;
   actualCompletedDate?: string;
   createdAt: string;
@@ -62,7 +63,7 @@ export interface AppSettings {
   hasPendingSync: boolean;
 }
 
-export interface ProgressPoint { chapterNumber: number; page: number }
+export interface ProgressPoint { chapterNumber: number; page: number; dialogueComplete?: boolean }
 export interface ChapterTotalPagesUpdate { chapterNumber: number; totalPages: number }
 export interface LocalEvent {
   id: string;

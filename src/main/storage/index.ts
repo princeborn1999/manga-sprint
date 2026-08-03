@@ -43,7 +43,12 @@ function isLegacySampleState(state: MangaState): boolean {
 
 export function getState(): MangaState {
   const state = store.get("state");
-  const merged = { ...defaultState, ...state, settings: { ...defaultState.settings, ...state.settings } };
+  const merged = {
+    ...defaultState,
+    ...state,
+    chapters: state.chapters.map((chapter) => ({ ...chapter, dialogueComplete: chapter.dialogueComplete ?? chapter.status === "completed" })),
+    settings: { ...defaultState.settings, ...state.settings },
+  };
   if (isLegacySampleState(merged)) {
     const cleaned: MangaState = {
       ...merged,

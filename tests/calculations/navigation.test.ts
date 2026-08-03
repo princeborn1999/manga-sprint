@@ -6,14 +6,20 @@ const base = { title:"x",startDate:"2026-07-27",targetEndDate:"2026-07-27",statu
 describe("one-page controls", () => {
   it("moves +1 inside a chapter", () => {
     const chapters: Chapter[]=[{...base,id:"1",chapterNumber:1,totalPages:18,actualCompletedPages:12,order:0}];
-    expect(moveProgress(chapters,1)).toEqual({chapterNumber:1,page:13});
+    expect(moveProgress(chapters,1)).toEqual({chapterNumber:1,page:13,dialogueComplete:false});
   });
   it("moves from a completed chapter into next chapter page 1", () => {
-    const chapters: Chapter[]=[{...base,id:"1",chapterNumber:1,totalPages:18,actualCompletedPages:18,order:0,status:"completed"},{...base,id:"2",chapterNumber:2,totalPages:20,actualCompletedPages:0,order:1,status:"not-started"}];
-    expect(moveProgress(chapters,1)).toEqual({chapterNumber:2,page:1});
+    const chapters: Chapter[]=[{...base,id:"1",chapterNumber:1,totalPages:18,actualCompletedPages:18,dialogueComplete:true,order:0,status:"completed"},{...base,id:"2",chapterNumber:2,totalPages:20,actualCompletedPages:0,dialogueComplete:false,order:1,status:"not-started"}];
+    expect(moveProgress(chapters,1)).toEqual({chapterNumber:2,page:1,dialogueComplete:false});
   });
   it("never produces a negative page", () => {
     const chapters: Chapter[]=[{...base,id:"1",chapterNumber:1,totalPages:18,actualCompletedPages:0,order:0,status:"not-started"}];
     expect(moveProgress(chapters,-1)).toBeUndefined();
+  });
+  it("uses the final click for dialogue and can undo it without removing a page", () => {
+    const unfinished: Chapter[]=[{...base,id:"1",chapterNumber:1,totalPages:18,actualCompletedPages:18,dialogueComplete:false,order:0}];
+    expect(moveProgress(unfinished,1)).toEqual({chapterNumber:1,page:18,dialogueComplete:true});
+    const finished: Chapter[]=[{...unfinished[0],dialogueComplete:true,status:"completed"}];
+    expect(moveProgress(finished,-1)).toEqual({chapterNumber:1,page:18,dialogueComplete:false});
   });
 });

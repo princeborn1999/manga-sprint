@@ -7,7 +7,7 @@ import { BACKUP_RETENTION_DAYS } from "../../shared/constants";
 import { localDate } from "../../shared/date";
 
 const HEADERS = {
-  chapters: ["ChapterNumber","Title","TotalPages","StartDate","TargetEndDate","ActualCompletedPages","Status","ActualCompletedDate","CreatedAt","UpdatedAt"],
+  chapters: ["ChapterNumber","Title","TotalPages","StartDate","TargetEndDate","ActualCompletedPages","Status","ActualCompletedDate","CreatedAt","UpdatedAt","DialogueComplete"],
   dailyPlan: ["Date","ChapterNumber","IdealPage","TotalPages","IdealPercent","IsManualOverride"],
   dailyHistory: ["Date","ActualChapterNumber","ActualPage","ActualChapterTotalPages","ActualPercent","IdealChapterNumber","IdealPage","IdealChapterTotalPages","IdealPercent","CumulativeActualPages","CumulativeIdealPages","DifferencePages","Status","RecordedAt"],
 };
@@ -19,7 +19,7 @@ function assertXlsx(filePath: string): string {
 }
 
 function chapterRows(chapters: Chapter[]): unknown[][] {
-  return [HEADERS.chapters, ...chapters.map((c) => [c.chapterNumber,c.title,c.totalPages,c.startDate,c.targetEndDate,c.actualCompletedPages,c.status,c.actualCompletedDate ?? "",c.createdAt,c.updatedAt])];
+  return [HEADERS.chapters, ...chapters.map((c) => [c.chapterNumber,c.title,c.totalPages,c.startDate,c.targetEndDate,c.actualCompletedPages,c.status,c.actualCompletedDate ?? "",c.createdAt,c.updatedAt,Boolean(c.dialogueComplete)])];
 }
 
 function addSheet(workbook: XLSX.WorkBook, name: string, rows: unknown[][], widths: number[]): void {
@@ -31,7 +31,7 @@ function addSheet(workbook: XLSX.WorkBook, name: string, rows: unknown[][], widt
 
 export function workbookFromState(state: MangaState): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
-  addSheet(workbook, "Chapters", chapterRows(state.chapters), [14,26,12,14,16,22,14,20,24,24]);
+  addSheet(workbook, "Chapters", chapterRows(state.chapters), [14,26,12,14,16,22,14,20,24,24,18]);
   addSheet(workbook, "DailyPlan", [HEADERS.dailyPlan, ...state.dailyPlan.map((p) => [p.date,p.chapterNumber,p.idealPage,p.totalPages,p.idealPercent / 100,p.isManualOverride])], [14,14,12,12,14,18]);
   addSheet(workbook, "DailyHistory", [HEADERS.dailyHistory, ...state.dailyHistory.map((h) => [h.date,h.actualChapterNumber,h.actualPage,h.actualChapterTotalPages,h.actualPercent / 100,h.idealChapterNumber,h.idealPage,h.idealChapterTotalPages,h.idealPercent / 100,h.cumulativeActualPages,h.cumulativeIdealPages,h.differencePages,h.status,h.recordedAt])], [14,20,12,24,15,19,12,23,14,22,21,18,14,24]);
   addSheet(workbook, "Settings", [["Key","Value"],["ExcelSchemaVersion",state.settings.schemaVersion],["ProjectName",state.settings.projectName],["ExcelFilePath",state.settings.excelFilePath],["Opacity",state.settings.opacity],["AlwaysOnTop",state.settings.alwaysOnTop],["LaunchAtStartup",state.settings.launchAtStartup],["Theme",state.settings.theme],["LastOpenedAt",state.settings.lastOpenedAt]], [24,42]);
@@ -112,17 +112,26 @@ function importMangaSprintWorkbook(workbook: XLSX.WorkBook, sourcePath: string):
     const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value.trim()) : Number.NaN;
     return Number.isFinite(parsed) ? Math.round(parsed) : undefined;
   };
+  const boolean = (value: unknown): boolean | undefined => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string" && value.trim()) return ["true", "yes", "1", "完成"].includes(value.trim().toLowerCase());
+    return undefined;
+  };
   const chapters: LegacyImportPreview["chapters"] = [];
   for (const row of rows.slice(1)) {
     const chapterNumber = integer(row[column("ChapterNumber")]);
     const totalPages = integer(row[column("TotalPages")]);
     const actualCompletedPages = integer(row[column("ActualCompletedPages")]);
     if (!chapterNumber || chapterNumber <= 0 || actualCompletedPages === undefined) continue;
+    const status = String(row[column("Status")] ?? "");
+    const dialogueColumn = column("DialogueComplete");
     chapters.push({
       chapterNumber,
       title: String(row[column("Title")] ?? `Chapter ${chapterNumber}`),
       totalPages,
       actualCompletedPages,
+      dialogueComplete: dialogueColumn >= 0 ? boolean(row[dialogueColumn]) : status === "completed",
       actualValueIsPercent: false,
       startDate: dateValue(row[column("StartDate")]),
       targetEndDate: dateValue(row[column("TargetEndDate")]),
@@ -221,6 +230,7 @@ export function completeLegacyImport(preview: LegacyImportPreview, totals: Recor
     const value = raw.actualValueIsPercent
       ? Math.round((raw.actualCompletedPages / 100) * totalPages)
       : Math.min(raw.actualCompletedPages, totalPages);
-    return { id: randomUUID(), chapterNumber: raw.chapterNumber, title: raw.title ?? `Chapter ${raw.chapterNumber}`, totalPages, startDate: raw.startDate ?? localDate(), targetEndDate: raw.targetEndDate ?? localDate(), actualCompletedPages: value, status: value >= totalPages ? "completed" : value > 0 ? "in-progress" : "not-started", actualCompletedDate: value >= totalPages ? raw.actualCompletedDate ?? localDate() : undefined, createdAt: now, updatedAt: now, order };
+    const dialogueComplete = raw.dialogueComplete ?? (raw.actualValueIsPercent ? raw.actualCompletedPages >= 100 : raw.status === "completed");
+    return { id: randomUUID(), chapterNumber: raw.chapterNumber, title: raw.title ?? `Chapter ${raw.chapterNumber}`, totalPages, startDate: raw.startDate ?? localDate(), targetEndDate: raw.targetEndDate ?? localDate(), actualCompletedPages: value, dialogueComplete, status: dialogueComplete ? "completed" : value > 0 ? "in-progress" : "not-started", actualCompletedDate: dialogueComplete ? raw.actualCompletedDate ?? localDate() : undefined, createdAt: now, updatedAt: now, order };
   });
 }

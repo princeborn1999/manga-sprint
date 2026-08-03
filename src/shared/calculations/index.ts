@@ -5,6 +5,12 @@ export function percent(page: number, total: number): number {
   return total > 0 ? Math.round((Math.min(page, total) / total) * 100) : 0;
 }
 
+/** Drawn pages account for 99%; dialogue and speech-bubble finishing is the final 1%. */
+export function chapterProgressPercent(chapter: Pick<Chapter, "actualCompletedPages" | "totalPages" | "dialogueComplete">): number {
+  if (chapter.dialogueComplete && chapter.actualCompletedPages >= chapter.totalPages) return 100;
+  return Math.min(99, percent(chapter.actualCompletedPages, chapter.totalPages));
+}
+
 export function cumulativePages(chapters: Chapter[], point: ProgressPoint): number {
   return chapters
     .filter((c) => c.chapterNumber < point.chapterNumber)
@@ -45,6 +51,6 @@ export function buildDailyPlan(chapters: Chapter[], today = localDate()): DailyP
 }
 
 export function currentChapter(chapters: Chapter[]): Chapter | undefined {
-  return [...chapters].sort((a, b) => a.order - b.order).find((c) => c.actualCompletedPages < c.totalPages) ??
+  return [...chapters].sort((a, b) => a.order - b.order).find((c) => c.actualCompletedPages < c.totalPages || !c.dialogueComplete) ??
     [...chapters].sort((a, b) => b.order - a.order)[0];
 }

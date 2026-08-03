@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Chapter, ChapterTotalPagesUpdate, LocalEvent, MangaState, ProgressPoint } from "../../shared/types";
-import { buildDailyPlan, cumulativePages, paceStatus, percent } from "../../shared/calculations";
+import { buildDailyPlan, chapterProgressPercent, cumulativePages, paceStatus } from "../../shared/calculations";
 import { MAX_EVENTS } from "../../shared/constants";
 import { localDate } from "../../shared/date";
 import { validateChapterTotalPages, validateProgress } from "../../shared/validation";
@@ -24,7 +24,7 @@ function updateDailyHistory(state: MangaState, chapter: Chapter): void {
     actualChapterNumber: chapter.chapterNumber,
     actualPage: chapter.actualCompletedPages,
     actualChapterTotalPages: chapter.totalPages,
-    actualPercent: percent(chapter.actualCompletedPages, chapter.totalPages),
+    actualPercent: chapterProgressPercent(chapter),
     idealChapterNumber: ideal.chapterNumber,
     idealPage: ideal.idealPage,
     idealChapterTotalPages: ideal.totalPages,
@@ -42,13 +42,14 @@ function updateDailyHistory(state: MangaState, chapter: Chapter): void {
 
 export function applyProgress(state: MangaState, point: ProgressPoint): MangaState {
   const chapter = validateProgress(point, state.chapters);
-  const previous = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages };
+  const previous = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages, dialogueComplete: Boolean(chapter.dialogueComplete) };
   chapter.actualCompletedPages = point.page;
+  chapter.dialogueComplete = point.page === chapter.totalPages && point.dialogueComplete === true;
   chapter.updatedAt = new Date().toISOString();
-  chapter.status = point.page === 0 ? "not-started" : point.page === chapter.totalPages ? "completed" : "in-progress";
+  chapter.status = point.page === 0 ? "not-started" : chapter.dialogueComplete ? "completed" : "in-progress";
   chapter.actualCompletedDate = chapter.status === "completed" ? localDate() : undefined;
 
-  const actualPoint = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages };
+  const actualPoint = { chapterNumber: chapter.chapterNumber, page: chapter.actualCompletedPages, dialogueComplete: Boolean(chapter.dialogueComplete) };
   updateDailyHistory(state, chapter);
   state.settings.hasPendingSync = true;
   state.settings.syncStatus = "pending";
@@ -60,13 +61,15 @@ export function applyChapterTotalPages(state: MangaState, update: ChapterTotalPa
   const chapter = validateChapterTotalPages(update, state.chapters);
   const previousTotalPages = chapter.totalPages;
   const previousCompletedPages = chapter.actualCompletedPages;
+  const wasDialogueComplete = Boolean(chapter.dialogueComplete);
 
   chapter.totalPages = update.totalPages;
   chapter.actualCompletedPages = Math.min(previousCompletedPages, update.totalPages);
+  chapter.dialogueComplete = wasDialogueComplete && update.totalPages <= previousTotalPages && chapter.actualCompletedPages === update.totalPages;
   chapter.updatedAt = new Date().toISOString();
   chapter.status = chapter.actualCompletedPages === 0
     ? "not-started"
-    : chapter.actualCompletedPages === chapter.totalPages
+    : chapter.dialogueComplete
       ? "completed"
       : "in-progress";
   chapter.actualCompletedDate = chapter.status === "completed"
@@ -88,5 +91,5 @@ export function applyChapterTotalPages(state: MangaState, update: ChapterTotalPa
 
 export function chaptersFromInput(input: Array<{ chapterNumber: number; title: string; totalPages: number; startDate: string; targetEndDate: string }>): MangaState["chapters"] {
   const now = new Date().toISOString();
-  return input.map((chapter, order) => ({ ...chapter, id: randomUUID(), actualCompletedPages: 0, status: "not-started", createdAt: now, updatedAt: now, order }));
+  return input.map((chapter, order) => ({ ...chapter, id: randomUUID(), actualCompletedPages: 0, dialogueComplete: false, status: "not-started", createdAt: now, updatedAt: now, order }));
 }

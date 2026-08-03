@@ -2,6 +2,7 @@ import type { AppSettings, Chapter, ChapterTotalPagesUpdate, ProgressPoint } fro
 import { isValidLocalDate } from "../date";
 
 export function validateChapter(chapter: Chapter): void {
+  if (chapter.dialogueComplete && chapter.actualCompletedPages !== chapter.totalPages) throw new Error("台詞收尾完成前必須先完成所有頁數");
   if (!Number.isInteger(chapter.chapterNumber) || chapter.chapterNumber <= 0) throw new Error("話數必須為正整數");
   if (!chapter.title.trim() || chapter.title.length > 200) throw new Error("標題無效");
   if (!Number.isInteger(chapter.totalPages) || chapter.totalPages <= 0 || chapter.totalPages > 100_000) throw new Error("總頁數無效");
@@ -10,10 +11,12 @@ export function validateChapter(chapter: Chapter): void {
 }
 
 export function validateProgress(point: ProgressPoint, chapters: Chapter[]): Chapter {
+  if (point.dialogueComplete && !Number.isInteger(point.page)) throw new Error("台詞收尾進度無效");
   if (!Number.isInteger(point.chapterNumber) || !Number.isInteger(point.page)) throw new Error("進度必須是整數");
   const chapter = chapters.find((item) => item.chapterNumber === point.chapterNumber);
   if (!chapter) throw new Error("找不到指定話數");
   if (point.page < 0 || point.page > chapter.totalPages) throw new Error("頁數超出範圍");
+  if (point.dialogueComplete && point.page !== chapter.totalPages) throw new Error("台詞收尾完成前必須先完成所有頁數");
   return chapter;
 }
 
