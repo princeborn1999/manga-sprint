@@ -110,7 +110,7 @@ export function openSettings(): void {
 export function openPostStudio(): void {
   if (postStudioWindow) { postStudioWindow.show(); postStudioWindow.focus(); return; }
   postStudioWindow = new BrowserWindow({
-    width: 1180, height: 780, minWidth: 920, minHeight: 640, title: "MangaSprint — 發文工作室",
+    width: 920, height: 760, minWidth: 820, minHeight: 680, title: "MangaSprint — 發文工作室",
     backgroundColor: "#1e1826", show: false,
     webPreferences: { preload: path.join(__dirname, "../preload/index.cjs"), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });

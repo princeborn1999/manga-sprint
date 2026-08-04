@@ -19,6 +19,18 @@ function safeError(error: unknown): Error {
   return new Error(error instanceof Error ? error.message : String(error));
 }
 
+async function postImagesFromPaths(filePaths: string[]): Promise<SelectedPostImage[]> {
+  if (!Array.isArray(filePaths) || filePaths.length > 100) throw new Error("圖片數量無效");
+  return Promise.all(filePaths.map(async (filePath) => {
+    if (typeof filePath !== "string") throw new Error("圖片路徑無效");
+    const extension = path.extname(filePath).toLowerCase();
+    if (![".jpg", ".jpeg", ".png", ".webp"].includes(extension)) throw new Error("僅支援 JPG、PNG 與 WEBP 圖片");
+    const bytes = await readFile(filePath);
+    const mime = extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg";
+    return { id: crypto.randomUUID(), path: filePath, fileName: path.basename(filePath), extension, missing: false, previewDataUrl: `data:${mime};base64,${bytes.toString("base64")}` };
+  }));
+}
+
 async function syncCurrent(): Promise<ReturnType<typeof syncWorkbook> extends Promise<infer R> ? R : never> {
   const state = getState();
   if (!state.settings.excelFilePath) throw new Error("尚未設定 Excel 檔案");
@@ -182,14 +194,9 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.choosePostImages, async (): Promise<SelectedPostImage[]> => {
     const result = await dialog.showOpenDialog({ title: "選擇發文圖片", properties: ["openFile", "multiSelections"], filters: [{ name: "Images", extensions: ["jpg", "jpeg", "png", "webp"] }] });
     if (result.canceled) return [];
-    return Promise.all(result.filePaths.map(async (filePath) => {
-      const extension = path.extname(filePath).toLowerCase();
-      if (![".jpg", ".jpeg", ".png", ".webp"].includes(extension)) throw new Error("圖片格式無效");
-      const bytes = await readFile(filePath);
-      const mime = extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg";
-      return { id: crypto.randomUUID(), path: filePath, fileName: path.basename(filePath), extension, missing: false, previewDataUrl: `data:${mime};base64,${bytes.toString("base64")}` };
-    }));
+    return postImagesFromPaths(result.filePaths);
   });
+  ipcMain.handle(IPC.attachPostImages, (_event, paths: string[]) => postImagesFromPaths(paths));
   ipcMain.handle(IPC.getPostImagePreview, async (_event, filePath: string) => {
     if (typeof filePath !== "string" || !isSavedImagePath(filePath)) return null;
     const extension = path.extname(filePath).toLowerCase();

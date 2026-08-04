@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { combinePlatformContent, DEFAULT_TEMPLATES, generatePlatformPost, renderTemplate } from "../../src/shared/post-studio/templates";
 import type { PostProject } from "../../src/shared/post-studio/types";
+import { captionFor } from "../../src/shared/post-studio/simpleFormats";
 
 const project: PostProject = {
   id:"p1",workTitle:"葛瑞拉之怒",englishWorkTitle:"RAGE GORILLA",chapterNumber:18,chapterTitle:"",englishChapterTitle:"",postType:"new-chapter",shortHighlight:"The battle begins.",readingUrl:"https://example.com/18",publishDate:"2026-08-03",note:"",images:[],createdAt:"x",updatedAt:"x",
@@ -13,6 +14,13 @@ const project: PostProject = {
 };
 
 describe("Post Studio templates", () => {
+  it("keeps the three simplified post formats exact", () => {
+    expect(captionFor(project,"new-chapter")).toBe("Chapter 18\n\nRage Gorilla\n\nRead the full chapter.\n\nLink in bio.\n\n#manga\n#originalmanga\n#ragegorilla");
+    const character={...project,chapterTitle:"Dragon"};
+    expect(captionFor(character,"character-introduction")).toBe("Dragon\n\nRage Gorilla\n\n#manga\n#mangaart\n#ragegorilla");
+    const cover={...project,chapterTitle:"Volume 1 Cover"};
+    expect(captionFor(cover,"cover")).toBe("Volume 1 Cover\n\nComing Soon.\n\n#originalmanga\n#manga");
+  });
   it("replaces variables and removes blank or unknown placeholders", () => expect(renderTemplate("{{englishWorkTitle}} CH {{chapterNumber}}\n{{chapterTitle}}\n{{unknown}}", project)).toBe("RAGE GORILLA CH 18"));
   it("generates independent platform defaults", () => {
     const x=generatePlatformPost(project,"x",DEFAULT_TEMPLATES.x), instagram=generatePlatformPost(project,"instagram",DEFAULT_TEMPLATES.instagram);
@@ -22,4 +30,3 @@ describe("Post Studio templates", () => {
   it("combines Pixiv fields for one-click copy", () => { const value=combinePlatformContent("pixiv",generatePlatformPost(project,"pixiv",DEFAULT_TEMPLATES.pixiv)); expect(value).toContain("Title:\nRAGE GORILLA — Chapter 18"); expect(value).toContain("Tags:\nOriginal"); });
   it("leaves over-limit X text intact for the UI warning", () => { const long=structuredClone(project); long.shortHighlight="x".repeat(300); const value=combinePlatformContent("x",generatePlatformPost(long,"x",DEFAULT_TEMPLATES.x)); expect(value.length).toBeGreaterThan(280); expect(value).toContain("x".repeat(300)); });
 });
-

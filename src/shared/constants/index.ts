@@ -23,6 +23,7 @@ export const IPC = {
   duplicatePostProject: "post-studio:duplicate-project",
   savePostTemplates: "post-studio:save-templates",
   choosePostImages: "post-studio:choose-images",
+  attachPostImages: "post-studio:attach-images",
   getPostImagePreview: "post-studio:image-preview",
   copyPostText: "post-studio:copy-text",
   openPostPlatform: "post-studio:open-platform",

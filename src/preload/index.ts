@@ -28,6 +28,7 @@ const api: MangaSprintApi = {
   duplicatePostProject: (id) => ipcRenderer.invoke(IPC.duplicatePostProject, id),
   savePostTemplates: (templates) => ipcRenderer.invoke(IPC.savePostTemplates, templates),
   choosePostImages: () => ipcRenderer.invoke(IPC.choosePostImages),
+  attachPostImages: (paths) => ipcRenderer.invoke(IPC.attachPostImages, paths),
   getPostImagePreview: (filePath) => ipcRenderer.invoke(IPC.getPostImagePreview, filePath),
   copyPostText: (text) => ipcRenderer.invoke(IPC.copyPostText, text),
   openPostPlatform: (platform) => ipcRenderer.invoke(IPC.openPostPlatform, platform),

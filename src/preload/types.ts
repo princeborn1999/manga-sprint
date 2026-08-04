@@ -30,6 +30,7 @@ export interface MangaSprintApi {
   duplicatePostProject(id: string): Promise<PostStudioState>;
   savePostTemplates(templates: PostTemplate[]): Promise<PostStudioState>;
   choosePostImages(): Promise<SelectedPostImage[]>;
+  attachPostImages(paths: string[]): Promise<SelectedPostImage[]>;
   getPostImagePreview(path: string): Promise<string | null>;
   copyPostText(text: string): Promise<void>;
   openPostPlatform(platform: "x" | "instagram" | "pixiv" | "mangaPlus"): Promise<void>;

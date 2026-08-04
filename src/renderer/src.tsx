@@ -5,6 +5,7 @@ import { Settings } from "./pages/Settings";
 import { PostStudio } from "./pages/PostStudio";
 import { useAppStore } from "./stores/app";
 import "./styles/global.css";
+import "./styles/simple-studio-compact.css";
 
 export function App() {
   const load = useAppStore((state) => state.load);

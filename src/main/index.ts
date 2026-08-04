@@ -7,7 +7,7 @@ import { createWidget, openPostStudio, setQuitting, showWidget } from "./windows
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 else {
-  app.on("second-instance", showWidget);
+  app.on("second-instance", (_event, argv) => { if (argv.includes("--post-studio")) openPostStudio(); else showWidget(); });
   app.whenReady().then(() => {
     const state = getState();
     state.settings.lastOpenedAt = new Date().toISOString();
