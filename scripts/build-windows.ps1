@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $project = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $release = Join-Path $project "release"
+$version = (Get-Content -LiteralPath (Join-Path $project "package.json") -Raw | ConvertFrom-Json).version
 
 if (Test-Path -LiteralPath $release) {
   $resolvedRelease = (Resolve-Path -LiteralPath $release).Path
@@ -39,7 +40,7 @@ if (-not $packed) {
   Copy-Item -LiteralPath (Join-Path $project "out") -Destination (Join-Path $stage "out") -Recurse -Force
   $stagePackage = @{
     name = "mangasprint"
-    version = "0.1.0"
+    version = $version
     type = "module"
     main = "./out/main/index.js"
     dependencies = @{
@@ -66,12 +67,12 @@ if (-not $makensis) {
   throw "NSIS compiler is not cached. Install NSIS or run electron-builder's NSIS target once to download it."
 }
 
-& $makensis.FullName /INPUTCHARSET UTF8 /V3 "/DPRODUCT_NAME=MangaSprint" "/DVERSION=0.1.0" "/DPROJECT_DIR=$project" (Join-Path $project "build\installer.nsi")
+& $makensis.FullName /INPUTCHARSET UTF8 /V3 "/DPRODUCT_NAME=MangaSprint" "/DVERSION=$version" "/DPROJECT_DIR=$project" (Join-Path $project "build\installer.nsi")
 if ($LASTEXITCODE -ne 0) {
   throw "NSIS compiler failed."
 }
 
-$installer = Join-Path $release "MangaSprint-0.1.0-x64.exe"
+$installer = Join-Path $release "MangaSprint-$version-x64.exe"
 if (-not (Test-Path -LiteralPath $installer)) {
   throw "Installer was not created."
 }

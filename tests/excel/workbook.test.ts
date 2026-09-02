@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { completeLegacyImport, importLegacy, workbookFromState } from "../../src/main/excel";
 import { applyChapterTotalPages } from "../../src/main/services/progress";
+import { buildDailyPlan, cumulativePages, currentChapter } from "../../src/shared/calculations";
 import type { MangaState } from "../../src/shared/types";
 
 const state: MangaState = {
@@ -50,6 +51,38 @@ describe("MangaSprint workbook", () => {
         actualValueIsPercent: false,
         dialogueComplete: false,
       });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+  it("preserves a 16-page Chapter 16 schedule and calculates September 2 as four pages", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "mangasprint-ch16-"));
+    const file = path.join(directory, "gorilla_sprint_ch16-50-MangaSprint.xlsx");
+    try {
+      const portableState = structuredClone(state);
+      portableState.chapters = [{
+        ...portableState.chapters[0],
+        id: "16",
+        chapterNumber: 16,
+        title: "Chapter 16",
+        totalPages: 16,
+        startDate: "2026-08-31",
+        targetEndDate: "2026-09-11",
+        actualCompletedPages: 0,
+        order: 0,
+      }];
+      portableState.dailyPlan = buildDailyPlan(portableState.chapters, "2026-09-02");
+      XLSX.writeFile(workbookFromState(portableState), file);
+
+      const preview = importLegacy(file);
+      const chapters = completeLegacyImport(preview, {});
+      const plan = buildDailyPlan(chapters, "2026-09-02").find((item) => item.date === "2026-09-02");
+      const chapter = currentChapter(chapters);
+
+      expect(preview.preserveTotalPages).toBe(true);
+      expect(chapter).toMatchObject({ chapterNumber: 16, totalPages: 16, actualCompletedPages: 0 });
+      expect(plan).toMatchObject({ chapterNumber: 16, idealPage: 4, totalPages: 16, idealPercent: 25 });
+      expect(cumulativePages(chapters, { chapterNumber: 16, page: 0 }) - cumulativePages(chapters, { chapterNumber: 16, page: 4 })).toBe(-4);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

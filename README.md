@@ -20,8 +20,10 @@ Demo 使用固定的匿名示範資料，可以體驗展開／縮小、增減完
 下載最新的 Windows x64 安裝程式：
 
 ```text
-MangaSprint-0.1.0-x64.exe
+MangaSprint-0.1.1-x64.exe
 ```
+
+`v0.1.1` 修正重新匯入 MangaSprint Excel 時，16 頁話數可能被舊版誤判為完成 16% 的問題，並會保留每話既有總頁數與起訖日期。
 
 Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub 首頁自動產生的
 `Source code (zip)` 當成安裝程式。
@@ -59,7 +61,7 @@ Release 頁面也會附上可直接匯入的範例 Excel。請勿下載 GitHub �
 下載並執行 Windows x64 安裝程式：
 
 ```text
-MangaSprint-0.1.0-x64.exe
+MangaSprint-0.1.1-x64.exe
 ```
 
 目前安裝程式沒有商業程式碼簽章，Windows SmartScreen 可能顯示警告。請確認檔案來源可信，再選擇「其他資訊」→「仍要執行」。
@@ -302,7 +304,7 @@ npm run dist:win
 輸出位置：
 
 ```text
-release/MangaSprint-0.1.0-x64.exe
+release/MangaSprint-0.1.1-x64.exe
 ```
 
 ## 專案結構

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./style.css";
 
 const RELEASE_URL =
-  "https://github.com/princeborn1999/manga-sprint/releases/latest";
+  "https://github.com/princeborn1999/manga-sprint/releases/download/v0.1.1/MangaSprint-0.1.1-x64.exe";
 const REPOSITORY_URL = "https://github.com/princeborn1999/manga-sprint";
 
 type Language = "en" | "zh";
@@ -10,7 +10,7 @@ type Language = "en" | "zh";
 const copy = {
   en: {
     navFeatures: "Features",
-    download: "Download for Windows",
+    download: "Download v0.1.1 for Windows",
     badge: "A WINDOWS PROGRESS WIDGET FOR MANGA CREATORS",
     headline: "Know exactly where",
     headlineAccent: "today's work should be.",
@@ -53,7 +53,7 @@ const copy = {
   },
   zh: {
     navFeatures: "功能",
-    download: "下載 Windows 版",
+    download: "下載 Windows v0.1.1",
     badge: "WINDOWS 漫畫製作進度 WIDGET",
     headline: "今天該畫到哪，",
     headlineAccent: "抬頭就知道。",
