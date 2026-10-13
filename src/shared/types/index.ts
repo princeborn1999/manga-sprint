@@ -1,7 +1,8 @@
 export type ChapterStatus = "not-started" | "in-progress" | "completed";
 export type PaceStatus = "behind" | "on-track" | "ahead";
 export type SyncStatus = "synced" | "pending" | "error";
-export type DockPosition = "free" | "top-center" | "top-right" | "top-free" | "right-center";
+export type DockPosition =
+  "free" | "top-center" | "top-right" | "top-free" | "right-center";
 
 export interface Chapter {
   id: string;
@@ -45,7 +46,10 @@ export interface DailyHistory {
   recordedAt: string;
 }
 
-export interface WindowPosition { x: number; y: number }
+export interface WindowPosition {
+  x: number;
+  y: number;
+}
 export interface AppSettings {
   schemaVersion: number;
   projectName: string;
@@ -63,8 +67,15 @@ export interface AppSettings {
   hasPendingSync: boolean;
 }
 
-export interface ProgressPoint { chapterNumber: number; page: number; dialogueComplete?: boolean }
-export interface ChapterTotalPagesUpdate { chapterNumber: number; totalPages: number }
+export interface ProgressPoint {
+  chapterNumber: number;
+  page: number;
+  dialogueComplete?: boolean;
+}
+export interface ChapterTotalPagesUpdate {
+  chapterNumber: number;
+  totalPages: number;
+}
 export interface LocalEvent {
   id: string;
   timestamp: string;
@@ -86,9 +97,46 @@ export interface MangaState {
   events: LocalEvent[];
 }
 
-export type LegacyImportChapter = Partial<Omit<Chapter, "chapterNumber" | "actualCompletedPages">> & Pick<Chapter, "chapterNumber" | "actualCompletedPages"> & {
-  actualValueIsPercent?: boolean;
-};
+export interface MangaProject {
+  id: string;
+  state: MangaState;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkspaceState {
+  projects: MangaProject[];
+  activeProjectId?: string;
+  settings: AppSettings;
+}
+
+export interface ProjectProgressRequest {
+  projectId: string;
+  point: ProgressPoint;
+}
+
+export interface ProjectTotalPagesRequest {
+  projectId: string;
+  update: ChapterTotalPagesUpdate;
+}
+
+export interface ProjectTodaySummary {
+  projectId: string;
+  projectName: string;
+  chapterNumber?: number;
+  actualPage: number;
+  idealPage: number;
+  idealPercent: number;
+  gapPages: number;
+  missingPages: number;
+}
+
+export type LegacyImportChapter = Partial<
+  Omit<Chapter, "chapterNumber" | "actualCompletedPages">
+> &
+  Pick<Chapter, "chapterNumber" | "actualCompletedPages"> & {
+    actualValueIsPercent?: boolean;
+  };
 
 export interface LegacyImportPreview {
   sourcePath: string;
@@ -98,4 +146,8 @@ export interface LegacyImportPreview {
   preserveTotalPages?: boolean;
 }
 
-export interface OperationResult { ok: boolean; message: string; path?: string }
+export interface OperationResult {
+  ok: boolean;
+  message: string;
+  path?: string;
+}

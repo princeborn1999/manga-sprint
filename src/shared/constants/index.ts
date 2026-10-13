@@ -1,11 +1,13 @@
 export const IPC = {
   getInitialState: "state:get-initial",
+  selectProject: "project:select",
   updateProgress: "progress:update",
   updateChapterTotalPages: "chapter:update-total-pages",
   chooseExcelFile: "excel:choose",
   createExcelFile: "excel:create",
   importLegacyExcel: "excel:import-legacy",
   syncExcel: "excel:sync",
+  syncAllExcel: "excel:sync-all",
   createBackup: "excel:backup",
   updateSettings: "settings:update",
   setAlwaysOnTop: "window:always-on-top",
@@ -22,7 +24,7 @@ export const IPC = {
 export const EXCEL_SCHEMA_VERSION = 1;
 export const WIDGET_WIDTH = 268;
 export const WIDGET_COLLAPSED_WIDTH = 268;
-export const WIDGET_HEIGHT = 390;
+export const WIDGET_HEIGHT = 426;
 export const WIDGET_COLLAPSED_HEIGHT = 34;
 export const EXPANDED_WIDGET_OPACITY = 0.95;
 export const MAX_EVENTS = 500;

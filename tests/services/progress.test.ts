@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { applyChapterTotalPages, applyProgress } from "../../src/main/services/progress";
+import {
+  applyChapterTotalPages,
+  applyProgress,
+} from "../../src/main/services/progress";
 import { buildDailyPlan } from "../../src/shared/calculations";
 import type { MangaState } from "../../src/shared/types";
 
@@ -41,7 +44,10 @@ const state: MangaState = {
 
 describe("chapter total page adjustments", () => {
   it("adds pages without changing completed pages and rebuilds the plan", () => {
-    const result = applyChapterTotalPages(structuredClone(state), { chapterNumber: 11, totalPages: 20 });
+    const result = applyChapterTotalPages(structuredClone(state), {
+      chapterNumber: 11,
+      totalPages: 20,
+    });
 
     expect(result.chapters[0]).toMatchObject({
       totalPages: 20,
@@ -49,7 +55,10 @@ describe("chapter total page adjustments", () => {
       status: "in-progress",
     });
     expect(result.dailyPlan.every((item) => item.totalPages === 20)).toBe(true);
-    expect(result.settings).toMatchObject({ hasPendingSync: true, syncStatus: "pending" });
+    expect(result.settings).toMatchObject({
+      hasPendingSync: true,
+      syncStatus: "pending",
+    });
     expect(result.events[0]).toMatchObject({
       type: "chapter-total-pages",
       previousTotalPages: 18,
@@ -62,7 +71,10 @@ describe("chapter total page adjustments", () => {
     const input = structuredClone(state);
     input.chapters[0].actualCompletedPages = 16;
 
-    const result = applyChapterTotalPages(input, { chapterNumber: 11, totalPages: 14 });
+    const result = applyChapterTotalPages(input, {
+      chapterNumber: 11,
+      totalPages: 14,
+    });
 
     expect(result.chapters[0]).toMatchObject({
       totalPages: 14,
@@ -78,17 +90,35 @@ describe("chapter total page adjustments", () => {
   });
 
   it("keeps all pages at 99% until dialogue is marked complete", () => {
-    const pagesDone = applyProgress(structuredClone(state), { chapterNumber: 11, page: 18, dialogueComplete: false });
-    expect(pagesDone.chapters[0]).toMatchObject({ actualCompletedPages: 18, dialogueComplete: false, status: "in-progress" });
+    const pagesDone = applyProgress(structuredClone(state), {
+      chapterNumber: 11,
+      page: 18,
+      dialogueComplete: false,
+    });
+    expect(pagesDone.chapters[0]).toMatchObject({
+      actualCompletedPages: 18,
+      dialogueComplete: false,
+      status: "in-progress",
+    });
     expect(pagesDone.dailyHistory[0].actualPercent).toBe(99);
-    const finished = applyProgress(pagesDone, { chapterNumber: 11, page: 18, dialogueComplete: true });
-    expect(finished.chapters[0]).toMatchObject({ dialogueComplete: true, status: "completed" });
+    const finished = applyProgress(pagesDone, {
+      chapterNumber: 11,
+      page: 18,
+      dialogueComplete: true,
+    });
+    expect(finished.chapters[0]).toMatchObject({
+      dialogueComplete: true,
+      status: "completed",
+    });
     expect(finished.dailyHistory[0].actualPercent).toBe(100);
   });
 
   it("rejects invalid total page counts", () => {
-    expect(() => applyChapterTotalPages(structuredClone(state), { chapterNumber: 11, totalPages: 0 })).toThrow(
-      "總頁數必須介於 1 到 100000",
-    );
+    expect(() =>
+      applyChapterTotalPages(structuredClone(state), {
+        chapterNumber: 11,
+        totalPages: 0,
+      }),
+    ).toThrow("總頁數必須介於 1 到 100000");
   });
 });

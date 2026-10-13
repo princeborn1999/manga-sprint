@@ -3,7 +3,7 @@
   "description": "Local Windows manga production progress tracker",
   "author": "MangaSprint",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {

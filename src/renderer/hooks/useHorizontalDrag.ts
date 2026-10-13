@@ -1,6 +1,9 @@
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-export function horizontalDragHandlers(enabled: boolean, onActivate?: () => void) {
+export function horizontalDragHandlers(
+  enabled: boolean,
+  onActivate?: () => void,
+) {
   let startX = 0;
   let startY = 0;
   let moved = false;
@@ -16,7 +19,11 @@ export function horizontalDragHandlers(enabled: boolean, onActivate?: () => void
   };
   const move = (event: ReactPointerEvent<HTMLElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    if (Math.abs(event.screenX - startX) > 4 || Math.abs(event.screenY - startY) > 4) moved = true;
+    if (
+      Math.abs(event.screenX - startX) > 4 ||
+      Math.abs(event.screenY - startY) > 4
+    )
+      moved = true;
     if (enabled) window.mangaSprint.horizontalDragMove(event.screenX);
   };
   const end = (event: ReactPointerEvent<HTMLElement>) => {
@@ -30,5 +37,10 @@ export function horizontalDragHandlers(enabled: boolean, onActivate?: () => void
     event.currentTarget.releasePointerCapture(event.pointerId);
     if (enabled) window.mangaSprint.horizontalDragEnd();
   };
-  return { onPointerDown: start, onPointerMove: move, onPointerUp: end, onPointerCancel: cancel };
+  return {
+    onPointerDown: start,
+    onPointerMove: move,
+    onPointerUp: end,
+    onPointerCancel: cancel,
+  };
 }

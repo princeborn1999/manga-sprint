@@ -1,7 +1,10 @@
 Unicode true
 RequestExecutionLevel user
 Name "${PRODUCT_NAME}"
-OutFile "${PROJECT_DIR}\release\MangaSprint-${VERSION}-x64.exe"
+!ifndef OUTPUT_DIR
+  !define OUTPUT_DIR "${PROJECT_DIR}\release"
+!endif
+OutFile "${OUTPUT_DIR}\MangaSprint-${VERSION}-x64.exe"
 InstallDir "$LOCALAPPDATA\Programs\MangaSprint"
 InstallDirRegKey HKCU "Software\MangaSprint" "InstallLocation"
 

@@ -1,5 +1,5 @@
 import { app } from "electron";
-import { registerIpc, syncCurrent } from "./ipc";
+import { registerIpc, syncAll } from "./ipc";
 import { createTray } from "./tray";
 import { getState, saveState } from "./storage";
 import { createWidget, setQuitting, showWidget } from "./windows";
@@ -16,11 +16,17 @@ else {
     createWidget(state, (x, y) => {
       const latest = getState();
       latest.settings.windowPosition = { x, y };
-      if (latest.settings.dockPosition === "top-center" || latest.settings.dockPosition === "top-right") latest.settings.dockPosition = "top-free";
+      if (
+        latest.settings.dockPosition === "top-center" ||
+        latest.settings.dockPosition === "top-right"
+      )
+        latest.settings.dockPosition = "top-free";
       return saveState(latest);
     });
-    createTray(async () => { await syncCurrent(); });
+    createTray(syncAll);
   });
-  app.on("window-all-closed", () => { /* tray app remains active */ });
+  app.on("window-all-closed", () => {
+    /* tray app remains active */
+  });
   app.on("before-quit", setQuitting);
 }
