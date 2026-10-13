@@ -18,6 +18,9 @@ export function ImportDialog() {
   const validTotalPages =
     Number.isInteger(defaultTotalPages) && defaultTotalPages > 0;
   const preservesTotalPages = preview.preserveTotalPages === true;
+  const displayedTotalPages = preservesTotalPages
+    ? (firstChapter?.totalPages ?? defaultTotalPages)
+    : defaultTotalPages;
   return (
     <div className="overlay no-drag">
       <div className="dialog">
@@ -38,12 +41,12 @@ export function ImportDialog() {
           </strong>
         </div>
         <label>
-          每話預設總頁數
+          {preservesTotalPages ? "每話總頁數（沿用 Excel）" : "每話預設總頁數"}
           <input
             type="number"
             min="1"
             max="100000"
-            value={defaultTotalPages}
+            value={displayedTotalPages}
             disabled={preservesTotalPages}
             onChange={(event) =>
               setDefaultTotalPages(Number(event.target.value))

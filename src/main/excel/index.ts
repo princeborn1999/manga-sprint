@@ -4,12 +4,14 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type {
   Chapter,
+  DailyPlan,
   LegacyImportPreview,
   MangaState,
   OperationResult,
 } from "../../shared/types";
 import { BACKUP_RETENTION_DAYS } from "../../shared/constants";
-import { localDate } from "../../shared/date";
+import { isValidLocalDate, localDate } from "../../shared/date";
+import { buildDailyPlan, percent } from "../../shared/calculations";
 
 const HEADERS = {
   chapters: [
@@ -261,6 +263,114 @@ function dateValue(value: unknown): string {
   return optionalDateValue(value) ?? localDate();
 }
 
+function importDailyPlan(
+  workbook: XLSX.WorkBook,
+  chapters: LegacyImportPreview["chapters"],
+): DailyPlan[] | undefined {
+  const sheet = workbook.Sheets.DailyPlan;
+  if (!sheet) return undefined;
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    raw: true,
+  });
+  const dataRows = rows
+    .slice(1)
+    .filter((row) =>
+      row.some(
+        (value) => value !== undefined && value !== null && value !== "",
+      ),
+    );
+  if (!dataRows.length) return undefined;
+  const headers = rows[0]?.map((value) => String(value ?? "")) ?? [];
+  const column = (name: string) => headers.indexOf(name);
+  if (HEADERS.dailyPlan.some((name) => column(name) < 0))
+    throw new Error("MangaSprint Excel 的 DailyPlan 欄位不完整");
+  const integer = (value: unknown): number | undefined => {
+    if (typeof value !== "number" && typeof value !== "string")
+      return undefined;
+    if (typeof value === "string" && !value.trim()) return undefined;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) ? parsed : undefined;
+  };
+  const boolean = (value: unknown): boolean | undefined => {
+    if (typeof value === "boolean") return value;
+    if (value === 1 || value === "1" || value === "true") return true;
+    if (value === 0 || value === "0" || value === "false") return false;
+    return undefined;
+  };
+  const seen = new Set<string>();
+  const plan = dataRows.map((row) => {
+    const date = optionalDateValue(row[column("Date")]);
+    const chapterNumber = integer(row[column("ChapterNumber")]);
+    const idealPage = integer(row[column("IdealPage")]);
+    const totalPages = integer(row[column("TotalPages")]);
+    const rawPercent = row[column("IdealPercent")];
+    const idealPercent =
+      typeof rawPercent === "number" ? rawPercent : Number.NaN;
+    const isManualOverride = boolean(row[column("IsManualOverride")]);
+    const chapter = chapters.find(
+      (item) => item.chapterNumber === chapterNumber,
+    );
+    if (
+      !date ||
+      !isValidLocalDate(date) ||
+      !chapter ||
+      idealPage === undefined ||
+      totalPages === undefined ||
+      totalPages <= 0 ||
+      totalPages !== chapter.totalPages ||
+      idealPage < 0 ||
+      idealPage > totalPages ||
+      !Number.isFinite(idealPercent) ||
+      idealPercent < 0 ||
+      idealPercent > 1 ||
+      Math.abs(idealPercent * 100 - percent(idealPage, totalPages)) > 1 ||
+      isManualOverride === undefined ||
+      seen.has(date)
+    )
+      throw new Error("MangaSprint Excel 的 DailyPlan 日期、話數或頁數無效");
+    seen.add(date);
+    return {
+      date,
+      chapterNumber: chapter.chapterNumber,
+      idealPage,
+      totalPages,
+      idealPercent: percent(idealPage, totalPages),
+      isManualOverride,
+    };
+  });
+  plan.sort((a, b) => a.date.localeCompare(b.date));
+  const previousPages = new Map<number, number>();
+  for (const row of plan) {
+    if (row.idealPage < (previousPages.get(row.chapterNumber) ?? 0))
+      throw new Error("MangaSprint Excel 的 DailyPlan 累計頁數不可倒退");
+    previousPages.set(row.chapterNumber, row.idealPage);
+  }
+  return plan;
+}
+
+export function dailyPlanFromImport(
+  preview: LegacyImportPreview,
+  chapters: Chapter[],
+): DailyPlan[] {
+  if (!preview.dailyPlan?.length) return buildDailyPlan(chapters);
+  return preview.dailyPlan.map((row) => {
+    const chapter = chapters.find(
+      (item) => item.chapterNumber === row.chapterNumber,
+    );
+    if (!chapter) throw new Error("DailyPlan 找不到對應話數");
+    const idealPage = Math.round(
+      (row.idealPage / row.totalPages) * chapter.totalPages,
+    );
+    return {
+      ...row,
+      idealPage,
+      totalPages: chapter.totalPages,
+      idealPercent: percent(idealPage, chapter.totalPages),
+    };
+  });
+}
+
 function importMangaSprintWorkbook(
   workbook: XLSX.WorkBook,
   sourcePath: string,
@@ -335,6 +445,7 @@ function importMangaSprintWorkbook(
     sourcePath,
     projectName: fileName.replace(/-MangaSprint$/i, ""),
     chapters,
+    dailyPlan: importDailyPlan(workbook, chapters),
     missingTotalPages: chapters
       .filter((chapter) => !chapter.totalPages)
       .map((chapter) => chapter.chapterNumber),

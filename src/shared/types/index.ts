@@ -142,6 +142,7 @@ export interface LegacyImportPreview {
   sourcePath: string;
   projectName: string;
   chapters: LegacyImportChapter[];
+  dailyPlan?: DailyPlan[];
   missingTotalPages: number[];
   preserveTotalPages?: boolean;
 }

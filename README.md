@@ -10,6 +10,7 @@ MangaSprint 是一個本機單人使用的 Windows 漫畫製作進度 Widget。�
 - 加總只計算落後量：某部漫畫超前不會抵銷另一部漫畫的待完成頁數。
 - 舊版的單一漫畫資料會在第一次開啟時自動移入第一個分頁，不必重新匯入。
 - 「同步全部」會把每部漫畫分別寫回各自的 MangaSprint Excel；任一檔案被鎖定時，該部作品的待同步進度仍保存在 App。
+- 匯入有 `DailyPlan` 的 MangaSprint Excel 時，會保留逐日理想頁數及休息日，不再重新平均分配。調整總頁數只縮放該話的排程，其他話保持原樣。
 
 ![MangaSprint 展開畫面](docs/images/widget-expanded.png)
 

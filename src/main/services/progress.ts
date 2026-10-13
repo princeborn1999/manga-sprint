@@ -11,6 +11,7 @@ import {
   chapterProgressPercent,
   cumulativePages,
   paceStatus,
+  percent,
 } from "../../shared/calculations";
 import { MAX_EVENTS } from "../../shared/constants";
 import { localDate } from "../../shared/date";
@@ -142,7 +143,30 @@ export function applyChapterTotalPages(
       ? (chapter.actualCompletedDate ?? localDate())
       : undefined;
 
-  state.dailyPlan = buildDailyPlan(state.chapters);
+  const chapterPlan = state.dailyPlan.filter(
+    (row) => row.chapterNumber === chapter.chapterNumber,
+  );
+  const updatedPlan = chapterPlan.some((row) => row.isManualOverride)
+    ? chapterPlan.map((row) => {
+        const idealPage = Math.round(
+          (row.idealPage / previousTotalPages) * chapter.totalPages,
+        );
+        return {
+          ...row,
+          idealPage,
+          totalPages: chapter.totalPages,
+          idealPercent: percent(idealPage, chapter.totalPages),
+        };
+      })
+    : buildDailyPlan(state.chapters).filter(
+        (row) => row.chapterNumber === chapter.chapterNumber,
+      );
+  state.dailyPlan = [
+    ...state.dailyPlan.filter(
+      (row) => row.chapterNumber !== chapter.chapterNumber,
+    ),
+    ...updatedPlan,
+  ].sort((a, b) => a.date.localeCompare(b.date));
   updateDailyHistory(state, chapter);
   state.settings.hasPendingSync = true;
   state.settings.syncStatus = "pending";

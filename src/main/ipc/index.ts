@@ -14,6 +14,7 @@ import { validateChapter, validateSettings } from "../../shared/validation";
 import {
   completeLegacyImport,
   createBackup,
+  dailyPlanFromImport,
   importLegacy,
   syncWorkbook,
 } from "../excel";
@@ -215,7 +216,7 @@ export function registerIpc(): void {
           ? findProject(workspace, request.projectId).state
           : createEmptyMangaState();
         state.chapters = completeLegacyImport(preview, request.totals);
-        state.dailyPlan = buildDailyPlan(state.chapters);
+        state.dailyPlan = dailyPlanFromImport(preview, state.chapters);
         state.dailyHistory = [];
         state.settings.projectName = preview.projectName;
         state.settings.excelFilePath = path.join(
