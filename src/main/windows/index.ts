@@ -1,4 +1,4 @@
-import { BrowserWindow, app, screen } from "electron";
+import { BrowserWindow, Menu, app, screen } from "electron";
 import path from "node:path";
 import {
   EXPANDED_WIDGET_OPACITY,
@@ -169,6 +169,38 @@ export function createWidget(
     if (!quitting) {
       event.preventDefault();
       widget?.hide();
+    }
+  });
+  widget.webContents.on("context-menu", (_event, params) => {
+    if (!widget) return;
+    const items: Electron.MenuItemConstructorOptions[] = params.isEditable
+      ? [
+          { role: "undo" },
+          { role: "redo" },
+          { type: "separator" },
+          { role: "cut" },
+          { role: "copy" },
+          { role: "paste" },
+          { role: "selectAll" },
+          { type: "separator" },
+        ]
+      : [];
+    items.push({
+      label: "設定",
+      accelerator: "CommandOrControl+,",
+      click: openSettings,
+    });
+    Menu.buildFromTemplate(items).popup({ window: widget });
+  });
+  widget.webContents.on("before-input-event", (event, input) => {
+    if (
+      input.type === "keyDown" &&
+      (input.control || input.meta) &&
+      !input.alt &&
+      (input.key === "," || input.code === "Comma")
+    ) {
+      event.preventDefault();
+      openSettings();
     }
   });
   rendererUrl(widget);

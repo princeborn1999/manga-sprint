@@ -11,11 +11,9 @@ import {
 let tray: Tray | null = null;
 
 export function createTray(sync: () => Promise<void>): Tray {
-  const icon = nativeImage
-    .createFromDataURL(
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-    )
-    .resize({ width: 16, height: 16 });
+  const icon = nativeImage.createFromDataURL(
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nO3XSw6AIAwEUM7nFT0OB9OdQUSZsdQWU5NusJ9ngoumdcnJMlqHm3I8ArSHXxAWw08Iq+EHIgD+AeXDNAfrJgOgCKKGB/QQZP47wF1TJlcMqBujeeJL2GreOxv+FyBfqwpALps6QPLuP4ABdQEIwAQA5QiAn8XExWrmYjn9PHa2N85PKC2xawAAAABJRU5ErkJggg==",
+  );
   tray = new Tray(icon);
   tray.setToolTip("MangaSprint");
   tray.setContextMenu(

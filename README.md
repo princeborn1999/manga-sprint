@@ -194,6 +194,10 @@ MangaSprint 使用 `electron-store` 保存即時狀態。
 
 ## 設定
 
+在 Widget 的內容或文字上按右鍵，選「設定」，或按 `Ctrl+,`。展開、收合狀態都可開啟設定。也可以在右下角系統匣的紫色 M 圖示上按右鍵，選「設定」。
+
+安裝版與 Portable 都可在設定頁勾選「Windows 登入時啟動」。Portable 請先解壓縮到固定資料夾，再啟用；搬移資料夾後需取消勾選，再重新勾選以更新啟動路徑。
+
 ![MangaSprint 設定與同步](docs/images/settings-sync.png)
 
 設定頁提供：

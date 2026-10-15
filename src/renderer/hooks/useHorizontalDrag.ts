@@ -9,6 +9,7 @@ export function horizontalDragHandlers(
   let moved = false;
 
   const start = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
     if ((event.target as HTMLElement).closest("button,input,select")) return;
     if (!enabled && !onActivate) return;
     startX = event.screenX;

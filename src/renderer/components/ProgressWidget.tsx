@@ -22,16 +22,32 @@ function ProjectTabs({
   const { busy, selectTab, previewImport } = useAppStore();
   return (
     <nav className="project-tabs no-drag" aria-label="漫畫專案">
-      {projects.map((project) => (
-        <button
-          key={project.id}
-          className={`project-tab ${active === project.id ? "active" : ""}`}
-          title={project.state.settings.projectName}
-          onClick={() => void selectTab(project.id)}
-        >
-          {project.state.settings.projectName}
-        </button>
-      ))}
+      <div
+        className="project-tabs-list"
+        onWheel={(event) => {
+          if (Math.abs(event.deltaY) > Math.abs(event.deltaX))
+            if (
+              event.currentTarget.scrollWidth > event.currentTarget.clientWidth
+            )
+              event.currentTarget.scrollLeft += event.deltaY;
+        }}
+      >
+        {projects.map((project) => {
+          const name = project.state.settings.projectName;
+          const shortName = name.replace(/_sprint(?:_.*)?$/i, "");
+          return (
+            <button
+              key={project.id}
+              className={`project-tab ${active === project.id ? "active" : ""}`}
+              title={name}
+              aria-label={name}
+              onClick={() => void selectTab(project.id)}
+            >
+              {shortName || name}
+            </button>
+          );
+        })}
+      </div>
       <button
         className={`project-tab summary-tab ${active === "summary" ? "active" : ""}`}
         onClick={() => void selectTab("summary")}
